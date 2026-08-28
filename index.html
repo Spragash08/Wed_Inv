@@ -140,22 +140,23 @@ section{ position:relative; width:100%; padding:64px 20px; }
   isolation:isolate;
 }
 
-/* ---- real temple photo background ---- */
-/* ============= REPLACE: point this at your own temple photo ============= */
+/* ---- original hand-built temple illustration (see make_temple.py) ---- */
+/* The SVG is deliberately tall (400x1300): crown at the top, entrance
+   archway at the bottom. background-size:cover always leaves plenty of
+   vertical overflow for a tall image like this on any real screen, so we
+   just pan background-position-y from 0% (crown) to 100% (entrance) on
+   scroll — no zoom, ever. See onScroll() in the script for the pan. */
+/* ============= REPLACE: point this at your own temple artwork ============= */
 .hero-bg-image{
   position:absolute; inset:0; z-index:0;
-  background-image:url('360_F_1606669096_s2m2fl3hBkb73Um5R3ObTmx2beWo1Zis.jpg');
+  background-image:url('temple.svg');
   background-size:cover;
-  background-position:center 28%;
-  /* --bgYf is a unitless fraction of viewport height, set by JS on scroll.
-     --bgScale grows in lockstep so the zoom always has enough headroom to
-     cover the pan distance — see onScroll() in the script for the math. */
-  --bgYf:0; --bgScale:1.12;
-  transform:translateY(calc(var(--bgYf) * 1svh)) scale(var(--bgScale));
-  filter:saturate(1.15) contrast(1.05);
-  will-change:transform;
+  background-repeat:no-repeat;
+  background-position-x:center;
+  background-position-y:0%;
+  will-change:background-position;
 }
-/* ========================================================================= */
+/* ============================================================================ */
 /* tint + darken so text stays readable over any photo */
 .hero-overlay{
   position:absolute; inset:0; z-index:1;
@@ -193,24 +194,32 @@ section{ position:relative; width:100%; padding:64px 20px; }
   .cursor-glow.active{ opacity:1; }
 }
 
-/* falling petals — unchanged behaviour, layered above the glow */
-.petals{ position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden; }
+/* falling flowers — real jasmine/marigold shapes (see the flowerSVG() JS
+   helper below), sparse by design, and nudged by a "gust" on arrow-key
+   presses via a transition on the whole .petals layer's own transform. */
+.petals{
+  position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden;
+  transition:transform .6s cubic-bezier(.22,.85,.32,1);
+}
 .petal{
   position:absolute;
   top:-8%;
-  width:14px; height:14px;
-  background:radial-gradient(circle at 30% 30%, #ffe6ea, var(--gold-light) 60%, var(--kumkum) 100%);
-  border-radius:0 60% 0 60%;
-  opacity:.85;
+  width:20px; height:20px;
+  background-size:contain;
+  background-repeat:no-repeat;
+  opacity:.9;
   animation:fall linear infinite;
   will-change:transform;
 }
-.petal.marigold{ background:radial-gradient(circle at 30% 30%, #fff6d8, var(--gold) 65%, #b5790c 100%); border-radius:50%; }
 @keyframes fall{
   0%{   transform:translate3d(0,-10vh,0) rotate(0deg); }
-  100%{ transform:translate3d(var(--drift,20px),115vh,0) rotate(360deg); }
+  100%{ transform:translate3d(var(--drift,20px),115vh,0) rotate(300deg); }
 }
 .petals.paused .petal{ animation-play-state:paused; }
+
+/* jasmine garland draped across the top of the hero — pure celebration, no function */
+.hero-garland{ position:absolute; top:0; left:0; right:0; z-index:2; pointer-events:none; }
+.hero-garland svg{ width:100%; height:auto; display:block; }
 
 .hero-content{
   position:relative; z-index:4; color:var(--jasmine);
@@ -235,7 +244,7 @@ section{ position:relative; width:100%; padding:64px 20px; }
 }
 
 /* ---- animated couple cutout — stays fixed in front; only the temple behind it moves ---- */
-/* ============= REPLACE: point this at your own couple cutout PNG (see make_cutout.py) ============= */
+/* ============= REPLACE: point this at your own couple artwork (see couple.svg) ============= */
 .hero-couple-parallax{
   --tiltX:0deg; --tiltY:0deg;
   transform:perspective(700px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
@@ -584,9 +593,9 @@ section{ position:relative; width:100%; padding:64px 20px; }
 <header class="hero-pin-wrap" id="home">
   <div class="hero" id="heroInner">
 
-    <!-- ============= REPLACE: point this at your own temple photo ============= -->
+    <!-- ============= REPLACE: point this at your own temple artwork ============= -->
     <div class="hero-bg-image" aria-hidden="true"></div>
-    <!-- =========================================================================== -->
+    <!-- ============================================================================ -->
     <div class="hero-overlay" aria-hidden="true"></div>
 
     <!-- ambient glowing diya-light orbs -->
@@ -594,6 +603,36 @@ section{ position:relative; width:100%; padding:64px 20px; }
       <span class="orb orb1"></span>
       <span class="orb orb2"></span>
       <span class="orb orb3"></span>
+    </div>
+
+    <!-- jasmine + marigold garland draped across the top edge, purely decorative -->
+    <div class="hero-garland" aria-hidden="true">
+      <svg viewBox="0 0 400 56" preserveAspectRatio="none">
+        <path d="M0 6 Q50 42 100 10 T200 10 T300 10 T400 6" fill="none" stroke="#2F4E2C" stroke-width="3"/>
+        <g fill="#4B7447">
+          <polygon points="25,30 32,20 39,30"/>
+          <polygon points="125,32 132,22 139,32"/>
+          <polygon points="225,32 232,22 239,32"/>
+          <polygon points="325,30 332,20 339,30"/>
+        </g>
+        <g fill="#D4A017">
+          <circle cx="50" cy="36" r="6"/>
+          <circle cx="150" cy="38" r="6"/>
+          <circle cx="250" cy="38" r="6"/>
+          <circle cx="350" cy="36" r="6"/>
+        </g>
+        <g fill="#FFFDF6">
+          <circle cx="75" cy="26" r="4"/>
+          <circle cx="175" cy="27" r="4"/>
+          <circle cx="275" cy="27" r="4"/>
+          <circle cx="375" cy="26" r="4"/>
+          <circle cx="0" cy="9" r="4"/>
+          <circle cx="100" cy="12" r="4"/>
+          <circle cx="200" cy="12" r="4"/>
+          <circle cx="300" cy="12" r="4"/>
+          <circle cx="400" cy="9" r="4"/>
+        </g>
+      </svg>
     </div>
 
     <!-- cursor-follow spotlight, desktop only -->
@@ -614,10 +653,10 @@ section{ position:relative; width:100%; padding:64px 20px; }
       <!-- ========================================================== -->
 
       <!-- animated couple cutout — stays fixed here; gentle float + cursor tilt on desktop -->
-      <!-- ============= REPLACE: point this at your own couple cutout PNG (see make_cutout.py) ============= -->
+      <!-- ============= REPLACE: point this at your own couple artwork (see couple.svg) ============= -->
       <div class="hero-couple-parallax" id="heroCoupleParallax">
         <div class="hero-couple">
-          <img src="couple.png" alt="Illustration of the bride and groom in traditional South Indian wedding attire, walking hand in hand">
+          <img src="couple.svg" alt="Illustration of the bride and groom in traditional South Indian wedding attire, holding hands">
         </div>
       </div>
       <!-- ===================================================================================================== -->
@@ -876,18 +915,44 @@ section{ position:relative; width:100%; padding:64px 20px; }
   });
 
   /* ========================================================================
-     FALLING PETALS — lightweight CSS-driven animation, JS only builds
-     the elements once and pauses them when the hero scrolls off-screen.
+     FALLING FLOWERS — real jasmine (5-petal) and marigold (layered) shapes,
+     sparse by design. Press ← / → to blow a gust through them.
   ======================================================================== */
+  function jasmineSVG(){
+    return "data:image/svg+xml," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">'
+      + '<g fill="#FFFDF6">'
+      + '<ellipse cx="10" cy="4" rx="3" ry="5"/><ellipse cx="10" cy="16" rx="3" ry="5"/>'
+      + '<ellipse cx="4" cy="10" rx="5" ry="3"/><ellipse cx="16" cy="10" rx="5" ry="3"/>'
+      + '<ellipse cx="5.5" cy="5.5" rx="3" ry="4.2" transform="rotate(45 5.5 5.5)"/>'
+      + '<ellipse cx="14.5" cy="14.5" rx="3" ry="4.2" transform="rotate(45 14.5 14.5)"/>'
+      + '<ellipse cx="14.5" cy="5.5" rx="3" ry="4.2" transform="rotate(-45 14.5 5.5)"/>'
+      + '<ellipse cx="5.5" cy="14.5" rx="3" ry="4.2" transform="rotate(-45 5.5 14.5)"/>'
+      + '</g><circle cx="10" cy="10" r="2.6" fill="#F1CD6B"/></svg>'
+    );
+  }
+  function marigoldSVG(){
+    return "data:image/svg+xml," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">'
+      + '<circle cx="10" cy="10" r="9" fill="#D4A017"/>'
+      + '<g fill="#e8a83a">'
+      + '<circle cx="10" cy="3" r="3"/><circle cx="17" cy="10" r="3"/><circle cx="10" cy="17" r="3"/><circle cx="3" cy="10" r="3"/>'
+      + '<circle cx="14.9" cy="5.1" r="2.6"/><circle cx="14.9" cy="14.9" r="2.6"/><circle cx="5.1" cy="14.9" r="2.6"/><circle cx="5.1" cy="5.1" r="2.6"/>'
+      + '</g><circle cx="10" cy="10" r="4" fill="#b5790c"/></svg>'
+    );
+  }
+  var FLOWER_URIS = [jasmineSVG(), marigoldSVG()];
+
   var petalWrap = document.getElementById('petals');
-  var PETAL_COUNT = 14;
+  var PETAL_COUNT = 7;
   for (var i = 0; i < PETAL_COUNT; i++){
     var p = document.createElement('span');
-    p.className = 'petal' + (i % 3 === 0 ? ' marigold' : '');
+    p.className = 'petal';
+    p.style.backgroundImage = "url('" + FLOWER_URIS[i % 2] + "')";
     var left = Math.random() * 100;
-    var duration = 9 + Math.random() * 7;
-    var delay = Math.random() * 10;
-    var drift = (Math.random() * 80 - 40).toFixed(0) + 'px';
+    var duration = 13 + Math.random() * 9;
+    var delay = Math.random() * 14;
+    var drift = (Math.random() * 70 - 35).toFixed(0) + 'px';
     p.style.left = left + '%';
     p.style.setProperty('--drift', drift);
     p.style.animationDuration = duration + 's';
@@ -902,6 +967,17 @@ section{ position:relative; width:100%; padding:64px 20px; }
       });
     }, { threshold: 0 }).observe(heroEl);
   }
+
+  /* arrow-key wind gust — nudges the whole flower layer sideways and eases back */
+  var gustTimer;
+  document.addEventListener('keydown', function(e){
+    var gust = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+    if (!gust) return;
+    e.preventDefault();
+    petalWrap.style.transform = 'translateX(' + (gust * 34) + 'px) rotate(' + (gust * 3) + 'deg)';
+    clearTimeout(gustTimer);
+    gustTimer = setTimeout(function(){ petalWrap.style.transform = ''; }, 420);
+  });
 
   /* ========================================================================
      HERO PIN HEIGHT — keeps the hero sticky for a fraction of the total
@@ -929,22 +1005,14 @@ section{ position:relative; width:100%; padding:64px 20px; }
   });
 
   /* ========================================================================
-     SCROLL-DRIVEN BACKGROUND PARALLAX + TOP PROGRESS BAR
-     The couple cutout stays fixed in place — only the temple photo behind
-     it pans/zooms as you scroll through the pinned first half of the site.
-
-     --bgYf is a *fraction of viewport height* (not raw px) and --bgScale
-     grows in lockstep with it, so at every scroll position the zoom has
-     grown enough to cover the pan distance with no empty edges showing —
-     this holds on any screen height, short phone or tall desktop, because
-     both quantities scale with the same viewport unit.
-       headroom fraction = (scale-1)/2   must stay >= |panFraction|
-       BG_PAN_MAX = 0.26, BG_SCALE_MAX = 1.58  →  headroom 0.29 > 0.26 ✓
+     SCROLL-DRIVEN BACKGROUND PAN + TOP PROGRESS BAR
+     The couple stays fixed in place — only the temple behind it moves,
+     panning straight down from the crown (0%) to the entrance (100%).
+     No scaling/zooming at all: background-size:cover already leaves a tall
+     image like temple.svg with plenty of vertical overflow to pan through
+     on any real screen (see the comment on .hero-bg-image), so this just
+     drives background-position-y directly off scroll progress.
   ======================================================================== */
-  var BG_PAN_MAX   = 0.26;   // how far the temple pans, as a fraction of viewport height
-  var BG_SCALE_MIN = 1.12;
-  var BG_SCALE_MAX = 1.58;
-
   var heroBgImage  = document.querySelector('.hero-bg-image');
   var progressBar  = document.getElementById('scrollProgress');
   var scrollTicking = false;
@@ -959,10 +1027,7 @@ section{ position:relative; width:100%; padding:64px 20px; }
     if (pinScrollRange > 0){
       var progress = (scrollY - pinTop) / pinScrollRange;
       progress = Math.max(0, Math.min(1, progress));
-      if (heroBgImage){
-        heroBgImage.style.setProperty('--bgYf', (-BG_PAN_MAX * progress).toFixed(4));
-        heroBgImage.style.setProperty('--bgScale', (BG_SCALE_MIN + (BG_SCALE_MAX - BG_SCALE_MIN) * progress).toFixed(4));
-      }
+      if (heroBgImage) heroBgImage.style.backgroundPositionY = (progress * 100).toFixed(2) + '%';
     }
     scrollTicking = false;
   }
