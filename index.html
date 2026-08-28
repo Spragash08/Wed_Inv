@@ -43,13 +43,12 @@
 }
 
 *,*::before,*::after{ box-sizing:border-box; }
-html{ scroll-behavior:smooth; }
+html{ scroll-behavior:smooth; overflow-x:hidden; }
 body{
   margin:0;
   font-family:var(--font-body);
   color:var(--ink);
   background:var(--jasmine);
-  overflow-x:hidden;
   width:100%;
 }
 img{ max-width:100%; display:block; }
@@ -65,6 +64,19 @@ section{ position:relative; width:100%; padding:64px 20px; }
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
 }
+
+/* ==========================================================================
+   GLOBAL POLISH — scroll progress bar + custom scrollbar
+========================================================================== */
+.scroll-progress{
+  position:fixed; top:0; left:0; height:3px; width:0%;
+  background:linear-gradient(90deg, var(--gold-light), var(--kumkum), var(--gold));
+  z-index:300; pointer-events:none;
+  box-shadow:0 0 8px rgba(212,160,23,.6);
+}
+::-webkit-scrollbar{ width:10px; }
+::-webkit-scrollbar-track{ background:var(--ivory); }
+::-webkit-scrollbar-thumb{ background:linear-gradient(var(--gold), var(--kumkum)); border-radius:6px; }
 
 /* ==========================================================================
    Reusable ornaments
@@ -103,39 +115,86 @@ section{ position:relative; width:100%; padding:64px 20px; }
 .garland-strip{ width:100%; height:34px; display:block; margin-top:-2px; }
 
 /* ==========================================================================
-   2. HERO
+   2. HERO — pinned/sticky reveal, real temple photo + animated couple
+   The outer .hero-pin-wrap is given extra height by JS (setHeroPinHeight)
+   so that the inner .hero stays sticky for HERO_PIN_FRACTION of the whole
+   page, then releases into normal scrolling. See the <script> at the
+   bottom to tune that fraction.
 ========================================================================== */
-.hero{
+.hero-pin-wrap{
   position:relative;
-  min-height:100svh;
+  height:100svh; /* recalculated by JS once the page has laid out */
+}
+.hero{
+  position:sticky;
+  top:0;
+  height:100svh;
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:center;
+  justify-content:space-between;
   text-align:center;
-  padding:40px 20px 60px;
+  padding:30px 20px 64px;
   overflow:hidden;
-  background:linear-gradient(180deg,#3a0d18 0%, #6e0f20 38%, #9e1b32 70%, #c9622f 100%);
+  background:#2a0810; /* fallback color while the photo loads */
+  isolation:isolate;
 }
 
-/* gopuram silhouette + diya glow background */
-.hero-bg{
-  position:absolute; inset:0;
-  width:100%; height:100%;
-  z-index:0;
+/* ---- real temple photo background ---- */
+/* ============= REPLACE: point this at your own temple photo ============= */
+.hero-bg-image{
+  position:absolute; inset:0; z-index:0;
+  background-image:url('360_F_1606669096_s2m2fl3hBkb73Um5R3ObTmx2beWo1Zis.jpg');
+  background-size:cover;
+  background-position:center 28%;
+  /* --bgYf is a unitless fraction of viewport height, set by JS on scroll.
+     --bgScale grows in lockstep so the zoom always has enough headroom to
+     cover the pan distance — see onScroll() in the script for the math. */
+  --bgYf:0; --bgScale:1.12;
+  transform:translateY(calc(var(--bgYf) * 1svh)) scale(var(--bgScale));
+  filter:saturate(1.15) contrast(1.05);
+  will-change:transform;
+}
+/* ========================================================================= */
+/* tint + darken so text stays readable over any photo */
+.hero-overlay{
+  position:absolute; inset:0; z-index:1;
+  background:
+    radial-gradient(120% 65% at 50% 8%, rgba(58,13,24,.25), transparent 55%),
+    linear-gradient(180deg, rgba(50,11,20,.72) 0%, rgba(94,14,29,.62) 32%, rgba(158,27,50,.58) 62%, rgba(201,98,47,.66) 100%);
+}
+
+/* ambient glowing diya-light orbs, drifting gently */
+.hero-glow-orbs{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+.orb{
+  position:absolute; border-radius:50%;
+  background:radial-gradient(circle, rgba(241,205,107,.95), rgba(241,205,107,0) 70%);
+  filter:blur(3px);
+  animation:orbPulse 4.5s ease-in-out infinite;
+}
+.orb1{ width:100px; height:100px; left:8%;  bottom:14%; animation-delay:0s; }
+.orb2{ width:60px;  height:60px; right:10%; bottom:38%; animation-delay:1.4s; }
+.orb3{ width:76px;  height:76px; left:48%;  bottom:6%;  animation-delay:2.6s; }
+@keyframes orbPulse{
+  0%,100%{ opacity:.3;  transform:scale(.85); }
+  50%{     opacity:.85; transform:scale(1.2); }
+}
+
+/* soft cursor-follow spotlight — desktop / precise-pointer only, purely decorative */
+.cursor-glow{
+  position:absolute; z-index:2; left:0; top:0;
+  width:320px; height:320px; border-radius:50%;
+  background:radial-gradient(circle, rgba(241,205,107,.22), transparent 70%);
+  transform:translate(-50%,-50%);
+  opacity:0; transition:opacity .35s ease;
   pointer-events:none;
 }
-.hero-bg svg{ width:100%; height:100%; display:block; }
-.diya-glow{ animation:diyaPulse 3.2s ease-in-out infinite; transform-origin:center; }
-.diya-glow:nth-child(2n){ animation-delay:.6s; }
-.diya-glow:nth-child(3n){ animation-delay:1.2s; }
-@keyframes diyaPulse{
-  0%,100%{ opacity:.55; filter:blur(1px); }
-  50%{ opacity:1; filter:blur(.2px); }
+@media (hover:hover) and (pointer:fine){
+  .cursor-glow.active{ opacity:1; }
 }
 
-/* falling petals — lightweight, pure CSS, low element count */
-.petals{ position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+/* falling petals — unchanged behaviour, layered above the glow */
+.petals{ position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden; }
 .petal{
   position:absolute;
   top:-8%;
@@ -153,86 +212,124 @@ section{ position:relative; width:100%; padding:64px 20px; }
 }
 .petals.paused .petal{ animation-play-state:paused; }
 
-.hero-content{ position:relative; z-index:2; color:var(--jasmine); }
-.hero-kalasham{ width:54px; margin:0 auto 14px; display:block; opacity:.9; }
+.hero-content{
+  position:relative; z-index:4; color:var(--jasmine);
+  display:flex; flex-direction:column; align-items:center;
+}
 .hero-eyebrow{
-  font-size:.78rem; letter-spacing:.3em; text-transform:uppercase;
-  color:var(--gold-light); margin-bottom:14px; font-weight:600;
+  font-size:.76rem; letter-spacing:.3em; text-transform:uppercase;
+  color:var(--gold-light); margin-bottom:10px; font-weight:600;
 }
 .hero-names{
   font-family:var(--font-head);
-  font-size:clamp(2.4rem, 11vw, 4rem);
-  line-height:1.15;
+  font-size:clamp(2.1rem, 9.5vw, 3.7rem);
+  line-height:1.14;
   color:#fff;
-  text-shadow:0 3px 18px rgba(0,0,0,.35);
+  text-shadow:0 3px 18px rgba(0,0,0,.4);
 }
 .hero-names .amp{
   display:block;
-  font-size:.5em;
+  font-size:.48em;
   color:var(--gold-light);
   margin:2px 0;
 }
-.hero-sub{
-  margin-top:10px;
-  font-size:1rem;
-  color:var(--ivory);
-  letter-spacing:.04em;
+
+/* ---- animated couple cutout — stays fixed in front; only the temple behind it moves ---- */
+/* ============= REPLACE: point this at your own couple cutout PNG (see make_cutout.py) ============= */
+.hero-couple-parallax{
+  --tiltX:0deg; --tiltY:0deg;
+  transform:perspective(700px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
+  transition:transform .12s ease-out;
+  margin:8px auto 2px;
 }
+.hero-couple{
+  position:relative;
+  width:min(60%, 230px);
+  margin:0 auto;
+  animation:coupleFloat 5s ease-in-out infinite;
+}
+.hero-couple::after{
+  content:'';
+  position:absolute; inset:-16% -10% -6%;
+  background:radial-gradient(ellipse 62% 58% at 50% 55%, rgba(241,205,107,.55), transparent 72%);
+  filter:blur(16px);
+  z-index:0;
+  animation:auraPulse 4s ease-in-out infinite;
+}
+.hero-couple img{
+  position:relative; z-index:1;
+  width:100%; display:block;
+  filter:drop-shadow(0 16px 18px rgba(0,0,0,.45));
+}
+@keyframes coupleFloat{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-9px);} }
+@keyframes auraPulse{ 0%,100%{ opacity:.5;} 50%{ opacity:.95;} }
+/* ===================================================================================================== */
+
 .hero-date{
-  margin-top:22px;
+  margin-top:6px;
   display:inline-flex;
   gap:10px;
   align-items:center;
   background:rgba(255,255,255,.12);
   border:1px solid rgba(241,205,107,.55);
-  padding:10px 20px;
+  padding:9px 18px;
   border-radius:999px;
   font-weight:600;
-  letter-spacing:.05em;
+  font-size:.88rem;
+  letter-spacing:.03em;
   backdrop-filter:blur(2px);
 }
 
 /* countdown */
 .countdown{
-  margin-top:28px;
+  margin-top:18px;
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:10px;
+  gap:8px;
   width:100%;
-  max-width:360px;
+  max-width:340px;
 }
 .countdown .cell{
   background:rgba(255,255,255,.10);
   border:1px solid rgba(241,205,107,.4);
   border-radius:14px;
-  padding:12px 4px;
+  padding:10px 4px;
+  transition:transform .25s ease, background .25s ease;
 }
+.countdown .cell:hover{ transform:translateY(-3px); background:rgba(255,255,255,.16); }
 .countdown .num{
   font-family:var(--font-head);
-  font-size:clamp(1.4rem,6vw,2rem);
+  font-size:clamp(1.3rem,5.6vw,1.9rem);
   color:var(--gold-light);
   line-height:1;
 }
 .countdown .lbl{
-  font-size:.62rem;
+  font-size:.6rem;
   letter-spacing:.14em;
   text-transform:uppercase;
-  margin-top:6px;
+  margin-top:5px;
   color:var(--ivory);
   opacity:.85;
 }
 
 .scroll-cue{
-  position:relative; z-index:2;
-  margin-top:34px;
+  position:relative; z-index:4;
   color:var(--gold-light);
-  font-size:.75rem;
+  font-size:.72rem;
   letter-spacing:.2em;
   text-transform:uppercase;
   display:flex; flex-direction:column; align-items:center; gap:6px;
   animation:bob 2.2s ease-in-out infinite;
 }
 @keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(6px);} }
+
+@media (max-height:700px){
+  .hero-couple{ width:min(52%, 190px); }
+  .scroll-cue{ display:none; }
+}
+@media (min-width:640px){
+  .hero-couple{ width:min(46%, 300px); }
+}
 
 /* ==========================================================================
    3. OUR STORY
@@ -329,7 +426,9 @@ section{ position:relative; width:100%; padding:64px 20px; }
   border-radius:var(--radius-md);
   padding:16px 18px;
   box-shadow:0 8px 22px rgba(74,12,24,.08);
+  transition:transform .3s ease, box-shadow .3s ease;
 }
+.tl-card:hover{ transform:translateY(-5px); box-shadow:0 18px 36px rgba(158,27,50,.18); }
 .tl-card h3{ font-size:1.15rem; color:var(--kumkum-dark); margin-bottom:2px; }
 .tl-time{ font-size:.8rem; font-weight:600; color:var(--leaf-dark); letter-spacing:.03em; }
 .tl-desc{ margin:8px 0 0; font-size:.9rem; color:#5a473f; }
@@ -347,6 +446,7 @@ section{ position:relative; width:100%; padding:64px 20px; }
 .venue-info h3{ color:var(--kumkum-dark); font-size:1.25rem; }
 .venue-actions{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
 .btn{
+  position:relative;
   display:inline-flex; align-items:center; gap:8px;
   padding:13px 22px;
   border-radius:999px;
@@ -355,8 +455,18 @@ section{ position:relative; width:100%; padding:64px 20px; }
   text-decoration:none;
   border:2px solid transparent;
   min-height:44px;
+  overflow:hidden;
   transition:transform .2s ease, box-shadow .2s ease;
 }
+.btn::after{
+  content:'';
+  position:absolute; top:0; left:-60%; width:40%; height:100%;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,.55), transparent);
+  transform:skewX(-20deg);
+  transition:left .6s ease;
+}
+.btn:hover::after, .btn:active::after{ left:130%; }
+.btn:hover{ transform:translateY(-2px); }
 .btn:active{ transform:scale(.97); }
 .btn-primary{ background:var(--kumkum); color:#fff; box-shadow:0 8px 18px rgba(158,27,50,.35); }
 .btn-outline{ background:transparent; border-color:var(--leaf); color:var(--leaf-dark); }
@@ -381,8 +491,12 @@ section{ position:relative; width:100%; padding:64px 20px; }
   border:2px solid #f2e2b6;
 }
 .g-item img{ width:100%; height:100%; object-fit:cover; transition:transform .4s ease; }
-.g-item.photo{ cursor:zoom-in; }
+.g-item.photo{ cursor:zoom-in; transition:box-shadow .3s ease; }
 .g-item.photo:active img{ transform:scale(1.05); }
+@media (hover:hover) and (pointer:fine){
+  .g-item.photo:hover img{ transform:scale(1.1); }
+  .g-item.photo:hover{ box-shadow:0 10px 24px rgba(158,27,50,.25); }
+}
 .g-item.deco{ background:linear-gradient(160deg,#fff,#fdf3d9); display:flex; align-items:center; justify-content:center; padding:14px; }
 .g-item.deco svg{ width:80%; height:80%; }
 
@@ -458,89 +572,73 @@ section{ position:relative; width:100%; padding:64px 20px; }
 </head>
 <body>
 
+<!-- top scroll-progress indicator -->
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
 <!-- ==========================================================================
-     HERO
+     HERO — pinned/sticky reveal section
+     Stays sticky while the rest of the page scrolls over it, then releases
+     after HERO_PIN_FRACTION of the total page height has been scrolled.
+     Tune that fraction in the <script> block near the bottom of this file.
 ========================================================================== -->
-<header class="hero" id="home">
-  <div class="hero-bg" aria-hidden="true">
-    <!-- Simplified temple gopuram silhouette with rows of glowing diyas -->
-    <svg viewBox="0 0 400 700" preserveAspectRatio="xMidYMax slice">
-      <defs>
-        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#3a0d18"/>
-          <stop offset="55%" stop-color="#8a1a2c"/>
-          <stop offset="100%" stop-color="#c9622f"/>
-        </linearGradient>
-      </defs>
-      <rect width="400" height="700" fill="url(#skyGrad)"/>
-      <!-- gopuram tiers, narrowing toward the top -->
-      <g fill="#3a0c15" opacity="0.75">
-        <polygon points="120,700 280,700 265,640 135,640"/>
-        <polygon points="135,640 265,640 253,585 147,585"/>
-        <polygon points="147,585 253,585 242,535 158,535"/>
-        <polygon points="158,535 242,535 232,490 168,490"/>
-        <polygon points="168,490 232,490 223,448 177,448"/>
-        <polygon points="177,448 223,448 214,410 186,410"/>
-        <polygon points="186,410 214,410 200,370 200,370"/>
-      </g>
-      <!-- kalasham finial -->
-      <circle cx="200" cy="360" r="6" fill="#D4A017" opacity="0.8"/>
-      <circle cx="200" cy="348" r="4" fill="#D4A017" opacity="0.8"/>
-      <!-- rows of diyas (glowing) along the tiers -->
-      <g class="diyas">
-        <circle class="diya-glow" cx="150" cy="660" r="4" fill="#F1CD6B"/>
-        <circle class="diya-glow" cx="180" cy="660" r="4" fill="#F1CD6B"/>
-        <circle class="diya-glow" cx="220" cy="660" r="4" fill="#F1CD6B"/>
-        <circle class="diya-glow" cx="250" cy="660" r="4" fill="#F1CD6B"/>
-        <circle class="diya-glow" cx="163" cy="605" r="3.5" fill="#F1CD6B"/>
-        <circle class="diya-glow" cx="200" cy="605" r="3.5" fill="#F1CD6B"/>
-        <circle class="diya-glow" cx="237" cy="605" r="3.5" fill="#F1CD6B"/>
-        <circle class="diya-glow" cx="175" cy="555" r="3" fill="#F1CD6B"/>
-        <circle class="diya-glow" cx="200" cy="555" r="3" fill="#F1CD6B"/>
-        <circle class="diya-glow" cx="225" cy="555" r="3" fill="#F1CD6B"/>
-      </g>
-    </svg>
-  </div>
+<header class="hero-pin-wrap" id="home">
+  <div class="hero" id="heroInner">
 
-  <!-- falling jasmine & marigold petals — purely decorative, pauses off-screen via JS -->
-  <div class="petals" id="petals" aria-hidden="true"></div>
+    <!-- ============= REPLACE: point this at your own temple photo ============= -->
+    <div class="hero-bg-image" aria-hidden="true"></div>
+    <!-- =========================================================================== -->
+    <div class="hero-overlay" aria-hidden="true"></div>
 
-  <div class="hero-content">
-    <!-- kalasham / lamp icon -->
-    <svg class="hero-kalasham" viewBox="0 0 60 60" fill="none" aria-hidden="true">
-      <path d="M30 4 L34 14 L26 14 Z" fill="#F1CD6B"/>
-      <ellipse cx="30" cy="34" rx="18" ry="10" fill="#F1CD6B" opacity=".85"/>
-      <ellipse cx="30" cy="30" rx="12" ry="7" fill="#9E1B32"/>
-    </svg>
-
-    <p class="hero-eyebrow">Together with their families</p>
-
-    <!-- ============= REPLACE: Bride & Groom names ============= -->
-    <h1 class="hero-names">
-      Nandha Kuman
-      <span class="amp">weds</span>
-      Gayathi
-    </h1>
-    <!-- ========================================================== -->
-
-    <p class="hero-sub">invite you to celebrate their wedding</p>
-
-    <!-- ============= REPLACE: date text shown to guests ============= -->
-    <div class="hero-date">📅 15 November 2026 · Muhurtham 6:00 AM</div>
-    <!-- ================================================================ -->
-
-    <!-- Live countdown to Muhurtham — logic in <script> below -->
-    <div class="countdown" id="countdown" aria-live="polite">
-      <div class="cell"><div class="num" id="cd-days">00</div><div class="lbl">Days</div></div>
-      <div class="cell"><div class="num" id="cd-hours">00</div><div class="lbl">Hours</div></div>
-      <div class="cell"><div class="num" id="cd-mins">00</div><div class="lbl">Mins</div></div>
-      <div class="cell"><div class="num" id="cd-secs">00</div><div class="lbl">Secs</div></div>
+    <!-- ambient glowing diya-light orbs -->
+    <div class="hero-glow-orbs" aria-hidden="true">
+      <span class="orb orb1"></span>
+      <span class="orb orb2"></span>
+      <span class="orb orb3"></span>
     </div>
-  </div>
 
-  <div class="scroll-cue" aria-hidden="true">
-    <span>Scroll</span>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4v16m0 0l-6-6m6 6l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <!-- cursor-follow spotlight, desktop only -->
+    <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+    <!-- falling jasmine & marigold petals — purely decorative, pauses off-screen via JS -->
+    <div class="petals" id="petals" aria-hidden="true"></div>
+
+    <div class="hero-content" id="heroContent">
+      <p class="hero-eyebrow">Together with their families</p>
+
+      <!-- ============= REPLACE: Bride & Groom names ============= -->
+      <h1 class="hero-names">
+        Nandha Kuman
+        <span class="amp">weds</span>
+        Gayathi
+      </h1>
+      <!-- ========================================================== -->
+
+      <!-- animated couple cutout — stays fixed here; gentle float + cursor tilt on desktop -->
+      <!-- ============= REPLACE: point this at your own couple cutout PNG (see make_cutout.py) ============= -->
+      <div class="hero-couple-parallax" id="heroCoupleParallax">
+        <div class="hero-couple">
+          <img src="couple.png" alt="Illustration of the bride and groom in traditional South Indian wedding attire, walking hand in hand">
+        </div>
+      </div>
+      <!-- ===================================================================================================== -->
+
+      <!-- ============= REPLACE: date text shown to guests ============= -->
+      <div class="hero-date">📅 15 November 2026 · Muhurtham 6:00 AM</div>
+      <!-- ================================================================ -->
+
+      <!-- Live countdown to Muhurtham — logic in <script> below -->
+      <div class="countdown" id="countdown" aria-live="polite">
+        <div class="cell"><div class="num" id="cd-days">00</div><div class="lbl">Days</div></div>
+        <div class="cell"><div class="num" id="cd-hours">00</div><div class="lbl">Hours</div></div>
+        <div class="cell"><div class="num" id="cd-mins">00</div><div class="lbl">Mins</div></div>
+        <div class="cell"><div class="num" id="cd-secs">00</div><div class="lbl">Secs</div></div>
+      </div>
+    </div>
+
+    <div class="scroll-cue" aria-hidden="true">
+      <span>Scroll</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4v16m0 0l-6-6m6 6l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
   </div>
 </header>
 
@@ -806,6 +904,106 @@ section{ position:relative; width:100%; padding:64px 20px; }
   }
 
   /* ========================================================================
+     HERO PIN HEIGHT — keeps the hero sticky for a fraction of the total
+     page height, then releases it into normal scrolling.
+     HERO_PIN_FRACTION = 0.5 means "pinned for the first half of the site".
+     Lower this (e.g. 0.3) if the pin ever feels too long.
+  ======================================================================== */
+  var HERO_PIN_FRACTION = 0.5;
+  var pinWrap = document.getElementById('home');
+
+  function setHeroPinHeight(){
+    pinWrap.style.height = '100svh';
+    var restHeight = document.body.scrollHeight - pinWrap.getBoundingClientRect().height;
+    if (restHeight > 0){
+      var pinHeight = restHeight * (HERO_PIN_FRACTION / (1 - HERO_PIN_FRACTION));
+      pinWrap.style.height = pinHeight + 'px';
+    }
+  }
+  setHeroPinHeight();
+  window.addEventListener('load', setHeroPinHeight);
+  var resizeTimer;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(setHeroPinHeight, 200);
+  });
+
+  /* ========================================================================
+     SCROLL-DRIVEN BACKGROUND PARALLAX + TOP PROGRESS BAR
+     The couple cutout stays fixed in place — only the temple photo behind
+     it pans/zooms as you scroll through the pinned first half of the site.
+
+     --bgYf is a *fraction of viewport height* (not raw px) and --bgScale
+     grows in lockstep with it, so at every scroll position the zoom has
+     grown enough to cover the pan distance with no empty edges showing —
+     this holds on any screen height, short phone or tall desktop, because
+     both quantities scale with the same viewport unit.
+       headroom fraction = (scale-1)/2   must stay >= |panFraction|
+       BG_PAN_MAX = 0.26, BG_SCALE_MAX = 1.58  →  headroom 0.29 > 0.26 ✓
+  ======================================================================== */
+  var BG_PAN_MAX   = 0.26;   // how far the temple pans, as a fraction of viewport height
+  var BG_SCALE_MIN = 1.12;
+  var BG_SCALE_MAX = 1.58;
+
+  var heroBgImage  = document.querySelector('.hero-bg-image');
+  var progressBar  = document.getElementById('scrollProgress');
+  var scrollTicking = false;
+
+  function onScroll(){
+    var scrollY = window.scrollY || window.pageYOffset;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (progressBar) progressBar.style.width = (docHeight > 0 ? (scrollY / docHeight) * 100 : 0) + '%';
+
+    var pinTop = pinWrap.offsetTop;
+    var pinScrollRange = pinWrap.offsetHeight - window.innerHeight;
+    if (pinScrollRange > 0){
+      var progress = (scrollY - pinTop) / pinScrollRange;
+      progress = Math.max(0, Math.min(1, progress));
+      if (heroBgImage){
+        heroBgImage.style.setProperty('--bgYf', (-BG_PAN_MAX * progress).toFixed(4));
+        heroBgImage.style.setProperty('--bgScale', (BG_SCALE_MIN + (BG_SCALE_MAX - BG_SCALE_MIN) * progress).toFixed(4));
+      }
+    }
+    scrollTicking = false;
+  }
+  window.addEventListener('scroll', function(){
+    if (!scrollTicking){ requestAnimationFrame(onScroll); scrollTicking = true; }
+  }, { passive:true });
+  onScroll();
+
+  /* ========================================================================
+     CURSOR SPOTLIGHT + COUPLE TILT — desktop / precise-pointer devices only
+  ======================================================================== */
+  if (window.matchMedia('(hover:hover) and (pointer:fine)').matches){
+    var heroInner = document.getElementById('heroInner');
+    var cursorGlow = document.getElementById('cursorGlow');
+    var heroCoupleParallax = document.getElementById('heroCoupleParallax');
+    heroInner.addEventListener('mousemove', function(e){
+      var rect = heroInner.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var y = e.clientY - rect.top;
+      if (cursorGlow){
+        cursorGlow.style.left = x + 'px';
+        cursorGlow.style.top = y + 'px';
+      }
+      if (heroCoupleParallax){
+        var rotY = ((x - rect.width / 2) / (rect.width / 2)) * 6;
+        var rotX = -((y - rect.height / 2) / (rect.height / 2)) * 6;
+        heroCoupleParallax.style.setProperty('--tiltX', rotX.toFixed(2) + 'deg');
+        heroCoupleParallax.style.setProperty('--tiltY', rotY.toFixed(2) + 'deg');
+      }
+    });
+    heroInner.addEventListener('mouseenter', function(){ cursorGlow && cursorGlow.classList.add('active'); });
+    heroInner.addEventListener('mouseleave', function(){
+      cursorGlow && cursorGlow.classList.remove('active');
+      if (heroCoupleParallax){
+        heroCoupleParallax.style.setProperty('--tiltX', '0deg');
+        heroCoupleParallax.style.setProperty('--tiltY', '0deg');
+      }
+    });
+  }
+
+  /* ========================================================================
      LIVE COUNTDOWN TO MUHURTHAM
      ============= REPLACE: update the target date/time below =============
      Written with the +05:30 (India) offset baked in, so the countdown
@@ -937,7 +1135,7 @@ section{ position:relative; width:100%; padding:64px 20px; }
           });
         }
       });
-    }, { threshold: 0.5 });
+    }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
     sections.forEach(function(s){ if (s) navObserver.observe(s); });
   }
 })();
