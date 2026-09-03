@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nandha &amp; Gayathi — Wedding Invitation</title>
-<meta name="description" content="You are cordially invited to the wedding of Nandha Kuman &amp; Gayathi">
+<title>Nandha &amp; Gayathri — Wedding Invitation</title>
+<meta name="description" content="You are cordially invited to the wedding of Nandha Kumar &amp; Gayathri">
 
 <!-- ==========================================================================
      GOOGLE FONTS
@@ -13,7 +13,7 @@
 ========================================================================== -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rozha+One&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rozha+One&family=Baloo+Thambi+2:wght@500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 /* ==========================================================================
@@ -132,37 +132,47 @@ section{ position:relative; width:100%; padding:64px 20px; }
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:space-between;
+  /* names+eyebrow center vertically as their own block; the couple/date/
+     countdown live inside the same flow (so nothing ever overlaps) but the
+     couple starts pushed toward the bottom via a scroll-driven transform,
+     and date+countdown start invisible — see the "settle" JS below */
+  justify-content:center;
   text-align:center;
   padding:30px 20px 64px;
   overflow:hidden;
-  background:#2a0810; /* fallback color while the photo loads */
+  background:#12181a; /* fallback color while the artwork paints in */
   isolation:isolate;
 }
 
 /* ---- original hand-built temple illustration (see make_temple.py) ---- */
-/* The SVG is deliberately tall (400x1300): crown at the top, entrance
-   archway at the bottom. background-size:cover always leaves plenty of
-   vertical overflow for a tall image like this on any real screen, so we
-   just pan background-position-y from 0% (crown) to 100% (entrance) on
-   scroll — no zoom, ever. See onScroll() in the script for the pan. */
-/* ============= REPLACE: point this at your own temple artwork ============= */
+/* Inlined directly (not a CSS background-image) so it always loads with the
+   page — no separate file request that some mobile browsers can flake on.
+   The SVG itself has no background fill; this gradient is the "sky" behind
+   it, kept here in CSS so it's easy to re-theme in one place. The SVG is
+   deliberately tall (400x1300 art, viewBox 0 0 560 1300): crown at the top,
+   entrance archway at the bottom. It renders at container width with its
+   natural (much taller) height, clipped by this container's overflow, and
+   onScroll() in the script below slides it up via transform:translateY —
+   a pure pan, no zoom ever, from 0 (crown) to fully revealing the entrance. */
 .hero-bg-image{
-  position:absolute; inset:0; z-index:0;
-  background-image:url('temple.svg');
-  background-size:cover;
-  background-repeat:no-repeat;
-  background-position-x:center;
-  background-position-y:0%;
-  will-change:background-position;
+  position:absolute; inset:0; z-index:0; overflow:hidden;
+  /* dusky neutral sky — a dark charcoal-teal fading to a warm dusk glow,
+     chosen to sit behind the temple's own teal/magenta/gold without a
+     competing red tint (see make_temple.py for the artwork's palette) */
+  background:linear-gradient(180deg,#0f1418 0%, #1c2226 35%, #3a2a22 68%, #6e3a1f 100%);
 }
-/* ============================================================================ */
-/* tint + darken so text stays readable over any photo */
+.hero-bg-svg{
+  position:absolute; left:0; top:0; width:100%; height:auto; display:block;
+  will-change:transform;
+}
+/* darken for text contrast without washing the temple's own colors out —
+   neutral charcoal at the crown warming to gold near the entrance, instead
+   of a flat kumkum-red tint fighting the temple's teal/magenta artwork */
 .hero-overlay{
   position:absolute; inset:0; z-index:1;
   background:
-    radial-gradient(120% 65% at 50% 8%, rgba(58,13,24,.25), transparent 55%),
-    linear-gradient(180deg, rgba(50,11,20,.72) 0%, rgba(94,14,29,.62) 32%, rgba(158,27,50,.58) 62%, rgba(201,98,47,.66) 100%);
+    radial-gradient(120% 65% at 50% 8%, rgba(10,10,14,.3), transparent 55%),
+    linear-gradient(180deg, rgba(18,14,20,.62) 0%, rgba(30,18,22,.4) 30%, rgba(60,28,20,.22) 62%, rgba(140,70,20,.38) 100%);
 }
 
 /* ambient glowing diya-light orbs, drifting gently */
@@ -179,6 +189,81 @@ section{ position:relative; width:100%; padding:64px 20px; }
 @keyframes orbPulse{
   0%,100%{ opacity:.3;  transform:scale(.85); }
   50%{     opacity:.85; transform:scale(1.2); }
+}
+
+/* click/tap firework — a small rocket flies in from a screen edge, then bursts
+   into sparks where you clicked. Sits above the temple but below the
+   petals/text/couple (z-index 2, same tier as the garland), so it never
+   covers what you're reading. */
+/* the rocket is always flame-colored (via currentColor set in JS from a
+   fire-only palette) regardless of what color it eventually bursts into —
+   real firecrackers glow orange in flight no matter what color they pop. */
+.fw-rocket{
+  position:absolute; z-index:2; top:0; left:0; width:6px; height:6px; border-radius:50%;
+  background:radial-gradient(circle, #fff 20%, currentColor 75%);
+  box-shadow:0 0 7px 2px currentColor, 0 0 14px 5px currentColor;
+  animation:fwTravel .3s cubic-bezier(.55,.06,.68,.19) forwards;
+  pointer-events:none;
+}
+/* small fire tail trailing behind, oriented along the actual travel direction */
+.fw-rocket::before{
+  content:'';
+  position:absolute; top:50%; left:50%;
+  width:28px; height:4px;
+  background:linear-gradient(90deg, transparent, currentColor 85%);
+  border-radius:2px;
+  transform-origin:right center;
+  transform:translate(-100%,-50%) rotate(var(--travelAngle, 0deg));
+  opacity:.85;
+  filter:blur(.5px);
+}
+@keyframes fwTravel{
+  0%{   transform:translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))); }
+  100%{ transform:translate(-50%,-50%); }
+}
+
+.firework{ position:absolute; z-index:2; top:0; left:0; width:0; height:0; pointer-events:none; }
+.firework .flash{
+  position:absolute; top:0; left:0; width:22px; height:22px; border-radius:50%;
+  background:radial-gradient(circle, #fff, rgba(255,255,255,0) 70%);
+  transform:translate(-50%,-50%); animation:fwFlash .4s ease-out forwards;
+}
+/* each spark is a wrapper rotated to its own launch angle, containing a
+   short streak that flies outward along that angle — reads as a radiating
+   glinting spark, not a flat colored dot */
+.firework .spark{ position:absolute; top:0; left:0; width:0; height:0; transform:rotate(var(--ang)); }
+.firework .spark i{
+  position:absolute; top:-1.4px; left:0; width:9px; height:2.8px; border-radius:2px;
+  background:linear-gradient(90deg, #fff, var(--sc) 55%, transparent);
+  box-shadow:0 0 5px 1px var(--sc);
+  animation:sparkFly .85s cubic-bezier(.16,.75,.3,1) forwards;
+}
+@keyframes fwFlash{ 0%{ opacity:1; transform:translate(-50%,-50%) scale(0.5); } 100%{ opacity:0; transform:translate(-50%,-50%) scale(2.6); } }
+@keyframes sparkFly{
+  0%{   transform:translateX(0) scaleX(.5);   opacity:1; }
+  12%{  transform:translateX(9px) scaleX(1.4); opacity:1; }
+  100%{ transform:translateX(var(--dist)) scaleX(.6); opacity:0; }
+}
+
+/* hanging oil lamps across the top edge, flames flickering irregularly */
+.hero-lamps{ position:absolute; top:0; left:0; right:0; z-index:2; pointer-events:none; }
+.hero-lamps svg{ width:100%; height:auto; display:block; }
+.lamp-glow{
+  transform-box:fill-box; transform-origin:center;
+  filter:blur(2px);
+  animation:orbPulse 3s ease-in-out infinite;
+}
+.lamp-flame{
+  transform-box:fill-box; transform-origin:50% 100%;
+  animation:flameFlicker 1.6s ease-in-out infinite;
+}
+.lamp-flame:nth-child(3n){ animation-duration:1.9s; }
+.lamp-flame:nth-child(3n+1){ animation-duration:1.35s; }
+@keyframes flameFlicker{
+  0%,100%{ transform:scale(1,1);     opacity:.92; }
+  30%{     transform:scale(.88,1.16); opacity:1;   }
+  55%{     transform:scale(1.08,.9);  opacity:.85; }
+  80%{     transform:scale(.94,1.08); opacity:.96; }
 }
 
 /* soft cursor-follow spotlight — desktop / precise-pointer only, purely decorative */
@@ -227,33 +312,46 @@ section{ position:relative; width:100%; padding:64px 20px; }
 }
 .hero-eyebrow{
   font-size:.76rem; letter-spacing:.3em; text-transform:uppercase;
-  color:var(--gold-light); margin-bottom:10px; font-weight:600;
+  color:var(--gold-light); font-weight:600;
+  margin:34px 0 12px; /* pushed down so the hanging lamps above never overlap it */
 }
 .hero-names{
-  font-family:var(--font-head);
-  font-size:clamp(2.1rem, 9.5vw, 3.7rem);
-  line-height:1.14;
+  /* a bolder, rounder face than the section headings — reads clearly over a
+     busy multicolor background where a thin serif would get lost */
+  font-family:'Baloo Thambi 2', var(--font-head);
+  font-weight:700;
+  font-size:clamp(2rem, 9vw, 3.5rem);
+  line-height:1.16;
   color:#fff;
-  text-shadow:0 3px 18px rgba(0,0,0,.4);
+  text-shadow:0 3px 4px rgba(0,0,0,.55), 0 8px 24px rgba(0,0,0,.5);
+  -webkit-text-stroke:1px rgba(20,10,8,.35);
 }
 .hero-names .amp{
   display:block;
-  font-size:.48em;
+  font-size:.44em;
+  font-weight:600;
   color:var(--gold-light);
-  margin:2px 0;
+  margin:4px 0;
+  -webkit-text-stroke:0;
 }
 
-/* ---- animated couple cutout — stays fixed in front; only the temple behind it moves ---- */
+/* ---- animated couple cutout — settles in from the bottom, then stays fixed
+   while only the temple behind it keeps moving ---- */
 /* ============= REPLACE: point this at your own couple artwork (see couple.svg) ============= */
 .hero-couple-parallax{
   --tiltX:0deg; --tiltY:0deg;
-  transform:perspective(700px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
+  /* --settleYf is a unitless fraction of viewport height, driven by JS —
+     starts at ~0.22 (couple sits low, near the bottom) and eases to 0
+     (natural resting spot, right under the names) within the first slice
+     of the scroll; see SETTLE_FRACTION in the script below */
+  --settleYf:0.22;
+  transform:translateY(calc(var(--settleYf) * 100svh)) perspective(700px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
   transition:transform .12s ease-out;
   margin:8px auto 2px;
 }
 .hero-couple{
   position:relative;
-  width:min(60%, 230px);
+  width:min(70%, 268px);
   margin:0 auto;
   animation:coupleFloat 5s ease-in-out infinite;
 }
@@ -265,16 +363,28 @@ section{ position:relative; width:100%; padding:64px 20px; }
   z-index:0;
   animation:auraPulse 4s ease-in-out infinite;
 }
-.hero-couple img{
+.hero-couple svg{
   position:relative; z-index:1;
   width:100%; display:block;
   filter:drop-shadow(0 16px 18px rgba(0,0,0,.45));
 }
 @keyframes coupleFloat{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-9px);} }
 @keyframes auraPulse{ 0%,100%{ opacity:.5;} 50%{ opacity:.95;} }
+
+/* gaze-tracking: cursor-tracking JS nudges these on desktop (see onScroll-adjacent
+   mousemove handler). transform-box:fill-box lets an SVG <g>/<circle> rotate or
+   translate around its own center instead of the outer SVG's (0,0) origin. */
+.head-group{
+  transform-box:fill-box; transform-origin:center;
+  transition:transform .18s ease-out;
+}
+.pupil{
+  transition:transform .12s ease-out;
+}
 /* ===================================================================================================== */
 
 .hero-date{
+  position:relative; overflow:hidden;
   margin-top:6px;
   display:inline-flex;
   gap:10px;
@@ -287,9 +397,39 @@ section{ position:relative; width:100%; padding:64px 20px; }
   font-size:.88rem;
   letter-spacing:.03em;
   backdrop-filter:blur(2px);
+  /* fades + slides in once the couple has settled into place (see the
+     settle-progress JS below); defaults to fully visible so it's never
+     accidentally stuck hidden if JS hasn't run yet */
+  opacity:var(--settleOpacity, 1);
+  transform:translateY(calc((1 - var(--settleOpacity, 1)) * 16px));
+  transition:opacity .45s ease, transform .45s ease;
+}
+/* a quiet shine sweeps across it once every 5s — the pill sits still the rest of the time */
+.hero-date::after{
+  content:'';
+  position:absolute; top:0; left:-60%; width:40%; height:100%;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,.65), transparent);
+  transform:skewX(-20deg);
+  animation:dateShine 5s ease-in-out infinite;
+}
+@keyframes dateShine{ 0%,88%{ left:-60%; } 100%{ left:130%; } }
+/* a playful bounce when the cursor lands on it — driven by JS (mouseenter),
+   NOT a CSS :hover rule. Some mobile browsers latch a lingering :hover
+   state after a tap, which made tapping the pill behave differently from
+   tapping anywhere else (e.g. the countdown) instead of just letting the
+   tap through normally like every other click in the hero. */
+.hero-date{ transition:box-shadow .2s ease; }
+@media (hover:hover){ .hero-date{ cursor:default; } }
+.hero-date.js-hover-glow{ box-shadow:0 6px 18px rgba(241,205,107,.35); }
+.hero-date.js-bounce{ animation:dateBounce .5s ease; }
+@keyframes dateBounce{
+  0%{   transform:scale(1) translateY(0); }
+  30%{  transform:scale(1.07) translateY(-6px); }
+  55%{  transform:scale(.98) translateY(1px); }
+  100%{ transform:scale(1) translateY(0); }
 }
 
-/* countdown */
+/* countdown — fades + slides in alongside the date pill, same settle progress */
 .countdown{
   margin-top:18px;
   display:grid;
@@ -297,6 +437,9 @@ section{ position:relative; width:100%; padding:64px 20px; }
   gap:8px;
   width:100%;
   max-width:340px;
+  opacity:var(--settleOpacity, 1);
+  transform:translateY(calc((1 - var(--settleOpacity, 1)) * 16px));
+  transition:opacity .45s ease, transform .45s ease;
 }
 .countdown .cell{
   background:rgba(255,255,255,.10);
@@ -322,7 +465,9 @@ section{ position:relative; width:100%; padding:64px 20px; }
 }
 
 .scroll-cue{
-  position:relative; z-index:4;
+  /* pinned to the bottom edge independently, now that .hero-content is
+     vertically centered as its own block rather than sharing space with this */
+  position:absolute; left:0; right:0; bottom:16px; z-index:4;
   color:var(--gold-light);
   font-size:.72rem;
   letter-spacing:.2em;
@@ -333,11 +478,11 @@ section{ position:relative; width:100%; padding:64px 20px; }
 @keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(6px);} }
 
 @media (max-height:700px){
-  .hero-couple{ width:min(52%, 190px); }
+  .hero-couple{ width:min(66%, 230px); }
   .scroll-cue{ display:none; }
 }
 @media (min-width:640px){
-  .hero-couple{ width:min(46%, 300px); }
+  .hero-couple{ width:min(50%, 380px); }
 }
 
 /* ==========================================================================
@@ -346,75 +491,23 @@ section{ position:relative; width:100%; padding:64px 20px; }
 .story{ background:var(--ivory); }
 .story-text{ text-align:center; max-width:520px; margin:0 auto 34px; color:var(--ink); }
 
-.arch-frames{
+/* "on a call" illustration pair */
+.call-figures{
   display:flex;
-  flex-direction:column;
-  gap:26px;
-  align-items:center;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+  max-width:420px;
+  margin:36px auto 0;
 }
-@media(min-width:640px){
-  .arch-frames{ flex-direction:row; justify-content:center; align-items:flex-end; gap:24px; }
-}
-
-/* temple-niche arch photo frame */
-.arch-frame{
-  width:220px;
-  max-width:78vw;
-  position:relative;
-  padding:14px;
-  background:linear-gradient(180deg,var(--gold-light),var(--gold));
-  border-radius:130px 130px 14px 14px;
-  box-shadow:0 18px 32px var(--shadow);
-}
-.arch-frame .inner{
-  border-radius:118px 118px 6px 6px;
-  overflow:hidden;
-  border:3px solid var(--jasmine);
-  background:var(--jasmine);
-  aspect-ratio:4/5;
-}
-.arch-frame .inner img{ width:100%; height:100%; object-fit:cover; }
-.arch-frame .cap{
-  text-align:center;
-  margin-top:10px;
-  font-size:.82rem;
-  color:var(--kumkum-dark);
-  font-weight:600;
-  letter-spacing:.04em;
-}
-.arch-frame.groom{ margin-top:0; }
-.arch-frame.bride{ margin-bottom:0; }
-
-/* kolam that "draws itself" on scroll */
-.kolam-wrap{ display:flex; justify-content:center; margin:44px 0 10px; }
-.kolam-svg{ width:180px; height:180px; }
-.kolam-svg path{
-  fill:none;
-  stroke:var(--kumkum);
-  stroke-width:2.4;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-  stroke-dasharray:1000;
-  stroke-dashoffset:1000;
-  transition:stroke-dashoffset 2.4s ease;
-}
-.kolam-svg.drawn path{ stroke-dashoffset:0; }
-.kolam-svg circle{ fill:var(--gold); opacity:0; transition:opacity .6s ease 2s; }
-.kolam-svg.drawn circle{ opacity:1; }
-
-/* illustrated bride & groom silhouettes fading in */
-.silhouettes{
-  display:flex; justify-content:center; align-items:flex-end; gap:26px;
-  margin-top:30px;
-}
-.silhouette{ width:100px; opacity:0; transform:translateY(20px); transition:opacity 1s ease, transform 1s ease; }
-.silhouette.visible{ opacity:1; transform:translateY(0); }
-.silhouette.groom{ transition-delay:.25s; }
+.call-figure{ width:38%; max-width:150px; }
+.call-bride{ transition-delay:.15s; }
 
 /* ==========================================================================
    4. EVENT SCHEDULE & VENUE
 ========================================================================== */
-.schedule{ background:var(--jasmine); }
+/* warm wash at the top blends the seam with the hero's dusk-glow ending, instead of a hard cut to flat ivory */
+.schedule{ background:linear-gradient(180deg, #f3d9a6 0%, var(--jasmine) 22%, var(--jasmine) 100%); }
 .timeline{ position:relative; padding-left:26px; margin-top:10px; }
 .timeline::before{
   content:'';
@@ -594,7 +687,20 @@ section{ position:relative; width:100%; padding:64px 20px; }
   <div class="hero" id="heroInner">
 
     <!-- ============= REPLACE: point this at your own temple artwork ============= -->
-    <div class="hero-bg-image" aria-hidden="true"></div>
+    <!-- ============= REPLACE: regenerate via `python make_temple.py` and re-paste temple_inline.svg here ============= -->
+    <div class="hero-bg-image" aria-hidden="true">
+      <svg class="hero-bg-svg" id="heroBgSvg" viewBox="0 0 560 1900" xmlns="http://www.w3.org/2000/svg"><defs>
+  <radialGradient id="doorGlow" cx="50%" cy="15%" r="85%">
+    <stop offset="0%"  stop-color="#ffdd9a" stop-opacity="0.9"/>
+    <stop offset="100%" stop-color="#2a0810" stop-opacity="1"/>
+  </radialGradient>
+  <radialGradient id="groundGlow" cx="50%" cy="0%" r="70%">
+    <stop offset="0%"  stop-color="#ffce7a" stop-opacity="0.55"/>
+    <stop offset="100%" stop-color="#ffce7a" stop-opacity="0"/>
+  </radialGradient>
+</defs><rect x="278.0" y="10" width="4" height="40" fill="#D4A017"/><polygon points="282.0,12 314.0,22 282.0,32" fill="#C23E70"/><circle cx="280.0" cy="60.0" r="11.0" fill="#D4A017"/><circle cx="280.0" cy="76.0" r="15.0" fill="#F1CD6B"/><circle cx="280.0" cy="76.0" r="15" fill="none" stroke="#154E50" stroke-width="2"/><polygon points="237.0,140.0 323.0,140.0 346.8,283.4 213.2,283.4" fill="#1E6B6E" /><rect x="217.1" y="251.9" width="125.8" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="207.2" y="278.4" width="145.6" height="6.0" fill="#D4A017" /><path d="M207.5 274.4 Q210.2 269.3 212.9 274.4 Z" fill="#D4A017"/><circle cx="210.2" cy="275.1" r="1.5" fill="#F1CD6B"/><path d="M347.1 274.4 Q349.8 269.3 352.5 274.4 Z" fill="#D4A017"/><circle cx="349.8" cy="275.1" r="1.5" fill="#F1CD6B"/><line x1="243.0" y1="143.0" x2="243.0" y2="276.4" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="280.0" y1="143.0" x2="280.0" y2="276.4" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="317.0" y1="143.0" x2="317.0" y2="276.4" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M240.5 247.5 L240.5 199.8 Q249.0 175.8 257.6 199.8 L257.6 247.5 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="249.0" cy="217.4" r="11.5" fill="#0E3638"/><path d="M302.4 247.5 L302.4 199.8 Q311.0 175.8 319.5 199.8 L319.5 247.5 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="311.0" cy="217.4" r="11.5" fill="#0E3638"/><polygon points="213.2,283.4 346.8,283.4 362.2,426.8 197.8,426.8" fill="#154E50" /><rect x="200.9" y="395.3" width="158.2" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="191.8" y="421.8" width="176.5" height="6.0" fill="#D4A017" /><path d="M192.0 417.8 Q194.8 412.5 197.6 417.8 Z" fill="#D4A017"/><circle cx="194.8" cy="418.5" r="1.5" fill="#F1CD6B"/><path d="M362.4 417.8 Q365.2 412.5 368.0 417.8 Z" fill="#D4A017"/><circle cx="365.2" cy="418.5" r="1.5" fill="#F1CD6B"/><line x1="222.5" y1="286.4" x2="222.5" y2="419.8" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="280.0" y1="286.4" x2="280.0" y2="419.8" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="337.5" y1="286.4" x2="337.5" y2="419.8" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M220.9 391.0 L220.9 343.2 Q231.9 319.2 242.9 343.2 L242.9 391.0 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="231.9" cy="360.8" r="11.5" fill="#0E3638"/><path d="M317.1 391.0 L317.1 343.2 Q328.1 319.2 339.1 343.2 L339.1 391.0 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="328.1" cy="360.8" r="11.5" fill="#0E3638"/><polygon points="197.8,426.8 362.2,426.8 375.5,570.2 184.5,570.2" fill="#1E6B6E" /><rect x="187.3" y="538.7" width="185.5" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="178.5" y="565.2" width="203.1" height="6.0" fill="#D4A017" /><path d="M178.6 561.2 Q181.5 555.7 184.4 561.2 Z" fill="#D4A017"/><circle cx="181.5" cy="561.9" r="1.6" fill="#F1CD6B"/><path d="M375.6 561.2 Q378.5 555.7 381.4 561.2 Z" fill="#D4A017"/><circle cx="378.5" cy="561.9" r="1.6" fill="#F1CD6B"/><line x1="209.3" y1="429.8" x2="209.3" y2="563.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="256.4" y1="429.8" x2="256.4" y2="563.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="303.6" y1="429.8" x2="303.6" y2="563.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="350.7" y1="429.8" x2="350.7" y2="563.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M209.9 534.4 L209.9 486.6 Q220.8 462.6 231.6 486.6 L231.6 534.4 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="220.8" cy="504.2" r="11.5" fill="#0E3638"/><path d="M269.1 534.4 L269.1 486.6 Q280.0 462.6 290.9 486.6 L290.9 534.4 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="280.0" cy="504.2" r="11.5" fill="#0E3638"/><path d="M328.4 534.4 L328.4 486.6 Q339.2 462.6 350.1 486.6 L350.1 534.4 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="339.2" cy="504.2" r="11.5" fill="#0E3638"/><polygon points="184.5,570.2 375.5,570.2 387.6,713.6 172.4,713.6" fill="#154E50" /><rect x="175.0" y="682.1" width="210.1" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="166.4" y="708.6" width="227.2" height="6.0" fill="#D4A017" /><path d="M166.4 704.6 Q169.4 698.9 172.4 704.6 Z" fill="#D4A017"/><circle cx="169.4" cy="705.4" r="1.7" fill="#F1CD6B"/><path d="M387.6 704.6 Q390.6 698.9 393.6 704.6 Z" fill="#D4A017"/><circle cx="390.6" cy="705.4" r="1.7" fill="#F1CD6B"/><line x1="197.8" y1="573.2" x2="197.8" y2="706.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="252.6" y1="573.2" x2="252.6" y2="706.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="307.4" y1="573.2" x2="307.4" y2="706.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="362.2" y1="573.2" x2="362.2" y2="706.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M200.2 677.8 L200.2 630.0 Q211.2 606.1 222.2 630.0 L222.2 677.8 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="211.2" cy="647.6" r="11.5" fill="#0E3638"/><path d="M269.0 677.8 L269.0 630.0 Q280.0 606.1 291.0 630.0 L291.0 677.8 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="280.0" cy="647.6" r="11.5" fill="#0E3638"/><path d="M337.8 677.8 L337.8 630.0 Q348.8 606.1 359.8 630.0 L359.8 677.8 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="348.8" cy="647.6" r="11.5" fill="#0E3638"/><polygon points="172.4,713.6 387.6,713.6 398.9,857.0 161.1,857.0" fill="#1E6B6E" /><rect x="163.5" y="825.5" width="232.9" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="155.1" y="852.0" width="249.8" height="6.0" fill="#D4A017" /><path d="M155.0 848.0 Q158.1 842.0 161.2 848.0 Z" fill="#D4A017"/><circle cx="158.1" cy="848.8" r="1.7" fill="#F1CD6B"/><path d="M398.8 848.0 Q401.9 842.0 405.0 848.0 Z" fill="#D4A017"/><circle cx="401.9" cy="848.8" r="1.7" fill="#F1CD6B"/><line x1="187.4" y1="716.6" x2="187.4" y2="850.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="233.7" y1="716.6" x2="233.7" y2="850.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="280.0" y1="716.6" x2="280.0" y2="850.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="326.3" y1="716.6" x2="326.3" y2="850.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="372.6" y1="716.6" x2="372.6" y2="850.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M191.9 821.1 L191.9 773.3 Q202.5 749.4 213.2 773.3 L213.2 821.1 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="202.5" cy="791.0" r="11.5" fill="#0E3638"/><path d="M243.5 821.1 L243.5 773.3 Q254.2 749.4 264.8 773.3 L264.8 821.1 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="254.2" cy="791.0" r="11.5" fill="#0E3638"/><path d="M295.2 821.1 L295.2 773.3 Q305.8 749.4 316.5 773.3 L316.5 821.1 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="305.8" cy="791.0" r="11.5" fill="#0E3638"/><path d="M346.8 821.1 L346.8 773.3 Q357.5 749.4 368.1 773.3 L368.1 821.1 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="357.5" cy="791.0" r="11.5" fill="#0E3638"/><polygon points="161.1,857.0 398.9,857.0 409.5,1000.4 150.5,1000.4" fill="#154E50" /><rect x="152.8" y="968.9" width="254.5" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="144.5" y="995.4" width="271.1" height="6.0" fill="#D4A017" /><path d="M144.2 991.4 Q147.5 985.2 150.7 991.4 Z" fill="#D4A017"/><circle cx="147.5" cy="992.2" r="1.8" fill="#F1CD6B"/><path d="M409.3 991.4 Q412.5 985.2 415.8 991.4 Z" fill="#D4A017"/><circle cx="412.5" cy="992.2" r="1.8" fill="#F1CD6B"/><line x1="177.8" y1="860.0" x2="177.8" y2="993.4" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="228.9" y1="860.0" x2="228.9" y2="993.4" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="280.0" y1="860.0" x2="280.0" y2="993.4" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="331.1" y1="860.0" x2="331.1" y2="993.4" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="382.2" y1="860.0" x2="382.2" y2="993.4" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M183.4 964.6 L183.4 916.8 Q194.4 892.9 205.4 916.8 L205.4 964.6 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="194.4" cy="934.4" r="11.5" fill="#0E3638"/><path d="M240.5 964.6 L240.5 916.8 Q251.5 892.9 262.5 916.8 L262.5 964.6 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="251.5" cy="934.4" r="11.5" fill="#0E3638"/><path d="M297.5 964.6 L297.5 916.8 Q308.5 892.9 319.5 916.8 L319.5 964.6 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="308.5" cy="934.4" r="11.5" fill="#0E3638"/><path d="M354.6 964.6 L354.6 916.8 Q365.6 892.9 376.6 916.8 L376.6 964.6 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="365.6" cy="934.4" r="11.5" fill="#0E3638"/><polygon points="150.5,1000.4 409.5,1000.4 419.7,1143.8 140.3,1143.8" fill="#1E6B6E" /><rect x="142.5" y="1112.3" width="275.0" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="134.3" y="1138.8" width="291.4" height="6.0" fill="#D4A017" /><path d="M134.0 1134.8 Q137.3 1128.4 140.7 1134.8 Z" fill="#D4A017"/><circle cx="137.3" cy="1135.6" r="1.8" fill="#F1CD6B"/><path d="M419.3 1134.8 Q422.7 1128.4 426.0 1134.8 Z" fill="#D4A017"/><circle cx="422.7" cy="1135.6" r="1.8" fill="#F1CD6B"/><line x1="168.6" y1="1003.4" x2="168.6" y2="1136.8" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="224.3" y1="1003.4" x2="224.3" y2="1136.8" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="280.0" y1="1003.4" x2="280.0" y2="1136.8" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="335.7" y1="1003.4" x2="335.7" y2="1136.8" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="391.4" y1="1003.4" x2="391.4" y2="1136.8" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M175.7 1107.9 L175.7 1060.1 Q186.7 1036.2 197.7 1060.1 L197.7 1107.9 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="186.7" cy="1077.8" r="11.5" fill="#0E3638"/><path d="M237.9 1107.9 L237.9 1060.1 Q248.9 1036.2 259.9 1060.1 L259.9 1107.9 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="248.9" cy="1077.8" r="11.5" fill="#0E3638"/><path d="M300.1 1107.9 L300.1 1060.1 Q311.1 1036.2 322.1 1060.1 L322.1 1107.9 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="311.1" cy="1077.8" r="11.5" fill="#0E3638"/><path d="M362.3 1107.9 L362.3 1060.1 Q373.3 1036.2 384.3 1060.1 L384.3 1107.9 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="373.3" cy="1077.8" r="11.5" fill="#0E3638"/><polygon points="140.3,1143.8 419.7,1143.8 429.4,1287.2 130.6,1287.2" fill="#154E50" /><rect x="132.7" y="1255.7" width="294.7" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="124.6" y="1282.2" width="310.9" height="6.0" fill="#D4A017" /><path d="M124.1 1278.2 Q127.6 1271.6 131.0 1278.2 Z" fill="#D4A017"/><circle cx="127.6" cy="1279.1" r="1.9" fill="#F1CD6B"/><path d="M429.0 1278.2 Q432.4 1271.6 435.9 1278.2 Z" fill="#D4A017"/><circle cx="432.4" cy="1279.1" r="1.9" fill="#F1CD6B"/><line x1="159.9" y1="1146.8" x2="159.9" y2="1280.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="207.9" y1="1146.8" x2="207.9" y2="1280.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="256.0" y1="1146.8" x2="256.0" y2="1280.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="304.0" y1="1146.8" x2="304.0" y2="1280.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="352.1" y1="1146.8" x2="352.1" y2="1280.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="400.1" y1="1146.8" x2="400.1" y2="1280.2" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M168.4 1251.3 L168.4 1203.5 Q179.4 1179.7 190.4 1203.5 L190.4 1251.3 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="179.4" cy="1221.2" r="11.5" fill="#0E3638"/><path d="M218.7 1251.3 L218.7 1203.5 Q229.7 1179.7 240.7 1203.5 L240.7 1251.3 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="229.7" cy="1221.2" r="11.5" fill="#0E3638"/><path d="M269.0 1251.3 L269.0 1203.5 Q280.0 1179.7 291.0 1203.5 L291.0 1251.3 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="280.0" cy="1221.2" r="11.5" fill="#0E3638"/><path d="M319.3 1251.3 L319.3 1203.5 Q330.3 1179.7 341.3 1203.5 L341.3 1251.3 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="330.3" cy="1221.2" r="11.5" fill="#0E3638"/><path d="M369.6 1251.3 L369.6 1203.5 Q380.6 1179.7 391.6 1203.5 L391.6 1251.3 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="380.6" cy="1221.2" r="11.5" fill="#0E3638"/><polygon points="130.6,1287.2 429.4,1287.2 438.9,1430.6 121.1,1430.6" fill="#1E6B6E" /><rect x="123.2" y="1399.1" width="313.6" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="115.1" y="1425.6" width="329.7" height="6.0" fill="#D4A017" /><path d="M114.6 1421.6 Q118.1 1414.8 121.7 1421.6 Z" fill="#D4A017"/><circle cx="118.1" cy="1422.5" r="2.0" fill="#F1CD6B"/><path d="M438.3 1421.6 Q441.9 1414.8 445.4 1421.6 Z" fill="#D4A017"/><circle cx="441.9" cy="1422.5" r="2.0" fill="#F1CD6B"/><line x1="151.5" y1="1290.2" x2="151.5" y2="1423.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="202.9" y1="1290.2" x2="202.9" y2="1423.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="254.3" y1="1290.2" x2="254.3" y2="1423.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="305.7" y1="1290.2" x2="305.7" y2="1423.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="357.1" y1="1290.2" x2="357.1" y2="1423.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="408.5" y1="1290.2" x2="408.5" y2="1423.6" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M161.4 1394.8 L161.4 1347.0 Q172.4 1323.1 183.4 1347.0 L183.4 1394.8 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="172.4" cy="1364.6" r="11.5" fill="#0E3638"/><path d="M215.2 1394.8 L215.2 1347.0 Q226.2 1323.1 237.2 1347.0 L237.2 1394.8 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="226.2" cy="1364.6" r="11.5" fill="#0E3638"/><path d="M269.0 1394.8 L269.0 1347.0 Q280.0 1323.1 291.0 1347.0 L291.0 1394.8 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="280.0" cy="1364.6" r="11.5" fill="#0E3638"/><path d="M322.8 1394.8 L322.8 1347.0 Q333.8 1323.1 344.8 1347.0 L344.8 1394.8 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="333.8" cy="1364.6" r="11.5" fill="#0E3638"/><path d="M376.6 1394.8 L376.6 1347.0 Q387.6 1323.1 398.6 1347.0 L398.6 1394.8 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="387.6" cy="1364.6" r="11.5" fill="#0E3638"/><polygon points="121.1,1430.6 438.9,1430.6 448.0,1574.0 112.0,1574.0" fill="#154E50" /><rect x="114.0" y="1542.5" width="332.0" height="4.2" fill="#C23E70" opacity="0.85"/><rect x="106.0" y="1569.0" width="348.0" height="6.0" fill="#D4A017" /><path d="M105.3 1565.0 Q109.0 1558.0 112.7 1565.0 Z" fill="#D4A017"/><circle cx="109.0" cy="1565.9" r="2.0" fill="#F1CD6B"/><path d="M447.3 1565.0 Q451.0 1558.0 454.7 1565.0 Z" fill="#D4A017"/><circle cx="451.0" cy="1565.9" r="2.0" fill="#F1CD6B"/><line x1="143.4" y1="1433.6" x2="143.4" y2="1567.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="198.0" y1="1433.6" x2="198.0" y2="1567.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="252.7" y1="1433.6" x2="252.7" y2="1567.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="307.3" y1="1433.6" x2="307.3" y2="1567.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="362.0" y1="1433.6" x2="362.0" y2="1567.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><line x1="416.6" y1="1433.6" x2="416.6" y2="1567.0" stroke="#0E3638" stroke-width="1" opacity="0.28"/><path d="M154.6 1538.2 L154.6 1490.4 Q165.6 1466.5 176.6 1490.4 L176.6 1538.2 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="165.6" cy="1508.0" r="11.5" fill="#0E3638"/><path d="M211.8 1538.2 L211.8 1490.4 Q222.8 1466.5 233.8 1490.4 L233.8 1538.2 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="222.8" cy="1508.0" r="11.5" fill="#0E3638"/><path d="M269.0 1538.2 L269.0 1490.4 Q280.0 1466.5 291.0 1490.4 L291.0 1538.2 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="280.0" cy="1508.0" r="11.5" fill="#0E3638"/><path d="M326.2 1538.2 L326.2 1490.4 Q337.2 1466.5 348.2 1490.4 L348.2 1538.2 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="337.2" cy="1508.0" r="11.5" fill="#0E3638"/><path d="M383.4 1538.2 L383.4 1490.4 Q394.4 1466.5 405.4 1490.4 L405.4 1538.2 Z" fill="#F1CD6B" opacity="0.95" stroke="#0E3638" stroke-width="0.8"/><circle cx="394.4" cy="1508.0" r="11.5" fill="#0E3638"/><circle cx="237.2" cy="421.8" r="4.0" fill="#F1CD6B" class="diya-glow"/><circle cx="322.8" cy="421.8" r="4.0" fill="#F1CD6B" class="diya-glow"/><circle cx="218.9" cy="708.6" r="4.0" fill="#F1CD6B" class="diya-glow"/><circle cx="341.1" cy="708.6" r="4.0" fill="#F1CD6B" class="diya-glow"/><circle cx="203.9" cy="995.4" r="4.0" fill="#F1CD6B" class="diya-glow"/><circle cx="356.1" cy="995.4" r="4.0" fill="#F1CD6B" class="diya-glow"/><circle cx="190.6" cy="1282.2" r="4.0" fill="#F1CD6B" class="diya-glow"/><circle cx="369.4" cy="1282.2" r="4.0" fill="#F1CD6B" class="diya-glow"/><rect x="82.0" y="1574.0" width="396.0" height="46.0" fill="#C7BEB0" /><rect x="82.0" y="1574.0" width="396.0" height="8.0" fill="#D4A017" /><rect x="82.0" y="1620.0" width="396.0" height="170.0" fill="#a89b86" /><rect x="82.0" y="1620.0" width="396.0" height="6.0" fill="#C7BEB0" /><rect x="8.0" y="1723.0" width="64.0" height="67.0" fill="#8E2A54" /><rect x="4.0" y="1784.0" width="72.0" height="6.0" fill="#C7BEB0" /><path d="M4.0 1723.0 Q40.0 1663.6 76.0 1723.0 Z" fill="#C23E70"/><circle cx="40.0" cy="1663.6" r="4.0" fill="#F1CD6B" class="diya-glow"/><path d="M26.6 1790.0 L26.6 1766.6 Q40.0 1746.5 53.4 1766.6 L53.4 1790.0 Z" fill="#3d1428"/><rect x="488.0" y="1723.0" width="64.0" height="67.0" fill="#8E2A54" /><rect x="484.0" y="1784.0" width="72.0" height="6.0" fill="#C7BEB0" /><path d="M484.0 1723.0 Q520.0 1663.6 556.0 1723.0 Z" fill="#C23E70"/><circle cx="520.0" cy="1663.6" r="4.0" fill="#F1CD6B" class="diya-glow"/><path d="M506.6 1790.0 L506.6 1766.6 Q520.0 1746.5 533.4 1766.6 L533.4 1790.0 Z" fill="#3d1428"/><path d="M206.0 1790.0 L206.0 1694.0 Q280.0 1654.0 354.0 1694.0 L354.0 1790.0 Z" fill="url(#doorGlow)" stroke="#D4A017" stroke-width="6"/><polygon points="184.0,1660.0 191.0,1676.0 198.0,1660.0" fill="#4B7447"/><circle cx="191.0" cy="1654.0" r="5.0" fill="#D4A017"/><polygon points="206.2,1664.4 213.2,1680.4 220.2,1664.4" fill="#4B7447"/><circle cx="213.2" cy="1658.4" r="5.0" fill="#D4A017"/><polygon points="228.5,1667.5 235.5,1683.5 242.5,1667.5" fill="#4B7447"/><circle cx="235.5" cy="1661.5" r="5.0" fill="#D4A017"/><polygon points="250.8,1669.4 257.8,1685.4 264.8,1669.4" fill="#4B7447"/><circle cx="257.8" cy="1663.4" r="5.0" fill="#D4A017"/><polygon points="273.0,1670.0 280.0,1686.0 287.0,1670.0" fill="#4B7447"/><circle cx="280.0" cy="1664.0" r="5.0" fill="#D4A017"/><polygon points="295.2,1669.4 302.2,1685.4 309.2,1669.4" fill="#4B7447"/><circle cx="302.2" cy="1663.4" r="5.0" fill="#D4A017"/><polygon points="317.5,1667.5 324.5,1683.5 331.5,1667.5" fill="#4B7447"/><circle cx="324.5" cy="1661.5" r="5.0" fill="#D4A017"/><polygon points="339.8,1664.4 346.8,1680.4 353.8,1664.4" fill="#4B7447"/><circle cx="346.8" cy="1658.4" r="5.0" fill="#D4A017"/><polygon points="362.0,1660.0 369.0,1676.0 376.0,1660.0" fill="#4B7447"/><circle cx="369.0" cy="1654.0" r="5.0" fill="#D4A017"/><path d="M191.0 1660.0 Q280.0 1682.0 369.0 1660.0" fill="none" stroke="#2F4E2C" stroke-width="3"/><rect x="168.0" y="1650.0" width="8.0" height="130.0" fill="#D4A017" /><rect x="156.0" y="1780.0" width="32.0" height="10.0" fill="#C7BEB0" /><circle cx="172.0" cy="1642.0" r="10.0" fill="#F1CD6B" class="diya-glow"/><rect x="384.0" y="1650.0" width="8.0" height="130.0" fill="#D4A017" /><rect x="372.0" y="1780.0" width="32.0" height="10.0" fill="#C7BEB0" /><circle cx="388.0" cy="1642.0" r="10.0" fill="#F1CD6B" class="diya-glow"/><rect x="57.0" y="1790.0" width="446.0" height="37.7" fill="#C7BEB0" /><rect x="45.0" y="1826.7" width="470.0" height="37.7" fill="#a89b86" /><rect x="33.0" y="1863.3" width="494.0" height="37.7" fill="#C7BEB0" /><rect x="0.0" y="1874.0" width="560.0" height="26.0" fill="url(#groundGlow)" /></svg>
+    </div>
+    <!-- ================================================================================================================= -->
     <!-- ============================================================================ -->
     <div class="hero-overlay" aria-hidden="true"></div>
 
@@ -635,6 +741,38 @@ section{ position:relative; width:100%; padding:64px 20px; }
       </svg>
     </div>
 
+    <!-- hanging oil lamps (thooku vilakku), the kind strung along temple ceilings — flames flicker via CSS -->
+    <div class="hero-lamps" aria-hidden="true">
+      <svg viewBox="0 0 400 120" preserveAspectRatio="none">
+        <g id="lampTemplate">
+          <!-- ceiling hook + beaded chain -->
+          <circle cx="0" cy="2" r="2.6" fill="none" stroke="#D4A017" stroke-width="1.6"/>
+          <line x1="0" y1="4" x2="0" y2="42" stroke="#D4A017" stroke-width="1.8"/>
+          <circle cx="0" cy="13" r="1.5" fill="#F1CD6B"/>
+          <circle cx="0" cy="24" r="1.5" fill="#F1CD6B"/>
+          <circle cx="0" cy="35" r="1.5" fill="#F1CD6B"/>
+          <!-- soft glow behind the flame -->
+          <circle class="lamp-glow" cx="0" cy="47" r="14" fill="#F1CD6B" opacity="0.3"/>
+          <!-- bowl, with a rim highlight -->
+          <path d="M-14 44 L14 44 L9 61 L-9 61 Z" fill="#D4A017"/>
+          <path d="M-14 44 L14 44" stroke="#F6E4A8" stroke-width="1.4"/>
+          <path d="M-11 50 L11 50" stroke="#8a5a1f" stroke-width="1" opacity="0.6"/>
+          <ellipse cx="0" cy="61" rx="9" ry="2.6" fill="#8a5a1f"/>
+          <!-- base knob + hanging tassel -->
+          <line x1="0" y1="63.5" x2="0" y2="70" stroke="#D4A017" stroke-width="1.6"/>
+          <circle cx="0" cy="72.5" r="2.6" fill="#D4A017"/>
+          <!-- layered flame -->
+          <path class="lamp-flame" d="M0 36 C-6.4 45 -6.4 54 0 59.5 C6.4 54 6.4 45 0 36 Z" fill="#F1CD6B"/>
+          <path class="lamp-flame" d="M0 41 C-3.6 47 -3.6 53.5 0 57 C3.6 53.5 3.6 47 0 41 Z" fill="#C23E70" opacity="0.7"/>
+          <path class="lamp-flame" d="M0 46 C-1.5 49 -1.5 52.5 0 54.5 C1.5 52.5 1.5 49 0 46 Z" fill="#FFFDF6" opacity="0.9"/>
+        </g>
+        <use href="#lampTemplate" x="50" y="0"/>
+        <use href="#lampTemplate" transform="translate(150,16) scale(0.85)"/>
+        <use href="#lampTemplate" transform="translate(250,16) scale(0.85)"/>
+        <use href="#lampTemplate" x="350" y="0"/>
+      </svg>
+    </div>
+
     <!-- cursor-follow spotlight, desktop only -->
     <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
@@ -646,17 +784,162 @@ section{ position:relative; width:100%; padding:64px 20px; }
 
       <!-- ============= REPLACE: Bride & Groom names ============= -->
       <h1 class="hero-names">
-        Nandha Kuman
+        Nandha Kumar
         <span class="amp">weds</span>
-        Gayathi
+        Gayathri
       </h1>
       <!-- ========================================================== -->
 
-      <!-- animated couple cutout — stays fixed here; gentle float + cursor tilt on desktop -->
-      <!-- ============= REPLACE: point this at your own couple artwork (see couple.svg) ============= -->
+      <!-- animated couple — stays fixed here; gentle float, cursor-tilt, and gaze-tracking eyes on desktop.
+           Inlined (not <img src="couple.svg">) so the tracking JS can reach the .pupil / .head-group
+           elements inside it — an <img> reference would hide them from the page's DOM entirely. -->
+      <!-- ============= REPLACE: regenerate from your own artwork, keeping the .pupil / .head-group structure ============= -->
       <div class="hero-couple-parallax" id="heroCoupleParallax">
         <div class="hero-couple">
-          <img src="couple.svg" alt="Illustration of the bride and groom in traditional South Indian wedding attire, holding hands">
+          <svg id="heroCoupleSvg" role="img" aria-label="Illustration of the bride and groom in traditional South Indian wedding attire, holding hands" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420">
+<defs>
+  <linearGradient id="sareeGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#C9622F"/>
+    <stop offset="100%" stop-color="#9E1B32"/>
+  </linearGradient>
+  <linearGradient id="shirtGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#F6DFA0"/>
+    <stop offset="100%" stop-color="#C68A17"/>
+  </linearGradient>
+  <linearGradient id="pallutGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#2E7D5B"/>
+    <stop offset="100%" stop-color="#1B4D38"/>
+  </linearGradient>
+  <linearGradient id="angavastramGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#C23E70"/>
+    <stop offset="100%" stop-color="#8E2A54"/>
+  </linearGradient>
+  <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#2B1712" stop-opacity="0.28"/>
+    <stop offset="100%" stop-color="#2B1712" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+
+<ellipse cx="150" cy="404" rx="98" ry="12" fill="url(#groundShadow)"/>
+
+<!-- ================= BRIDE ================= -->
+<g id="bride">
+  <!-- saree drape / body -->
+  <path d="M108 168
+           C90 190 78 230 76 270
+           C74 310 78 350 86 392
+           L150 392
+           L150 200
+           C150 182 132 168 108 168 Z" fill="url(#sareeGrad)"/>
+  <!-- pallu diagonal drape — a contrasting silk block (Kanjivaram-style) with a gold zari border, not just a same-tone stripe -->
+  <path d="M112 170 L150 200 L150 260 L96 200 Z" fill="url(#pallutGrad)"/>
+  <path d="M112 170 L150 200 M96 200 L150 260" stroke="#D4A017" stroke-width="3"/>
+  <path d="M100 204 L106 210 M108 212 L114 218 M116 220 L122 226" stroke="#D4A017" stroke-width="1.6" opacity="0.8"/>
+  <!-- hem border -->
+  <path d="M80 372 L150 372 L150 392 L86 392 Z" fill="#D4A017"/>
+  <!-- pleats hint -->
+  <path d="M118 220 L112 388 M132 210 L128 388 M144 202 L142 388" stroke="#7a1526" stroke-width="2" opacity="0.5" fill="none"/>
+
+  <!-- near arm reaching to groom -->
+  <path d="M144 220 C158 232 166 244 168 256" stroke="#C9622F" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <circle cx="169" cy="259" r="8" fill="#E8AD7D"/>
+
+  <!-- neck -->
+  <rect x="122" y="130" width="16" height="20" rx="6" fill="#E8AD7D"/>
+  <!-- head — grouped so cursor-tracking JS can tilt it as one unit -->
+  <g class="head-group" id="brideHeadGroup">
+    <circle cx="130" cy="112" r="24" fill="#E8AD7D"/>
+    <!-- hair -->
+    <path d="M106 108 C104 84 116 68 130 68 C146 68 158 84 156 108
+             C156 96 148 86 130 86 C114 86 106 96 106 108 Z" fill="#2B1712"/>
+    <path d="M108 108 C106 122 110 134 118 140 L112 140 C104 130 102 116 106 106 Z" fill="#2B1712"/>
+    <!-- bun, worn low at the back of the head -->
+    <circle cx="108" cy="122" r="10" fill="#2B1712"/>
+    <!-- jasmine string wrapped around the bun -->
+    <circle cx="98" cy="116" r="3" fill="#FFFDF6"/>
+    <circle cx="95" cy="123" r="3" fill="#FFFDF6"/>
+    <circle cx="97" cy="130" r="3" fill="#FFFDF6"/>
+    <circle cx="102" cy="135" r="3" fill="#FFFDF6"/>
+    <!-- eye — white sclera + a dark pupil the cursor-tracking JS nudges -->
+    <ellipse cx="124" cy="108" rx="4.6" ry="3.6" fill="#FFFDF6"/>
+    <circle class="pupil" cx="124" cy="108" r="2.1" fill="#2B1712"/>
+    <path d="M118.5 103.5 Q124 100 129.5 103.5" stroke="#2B1712" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M117 121 Q124 127 131 121" stroke="#7a3a20" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <!-- bindi -->
+    <circle cx="124" cy="99" r="2.6" fill="#9E1B32"/>
+  </g>
+
+  <!-- jewellery: layered necklace -->
+  <path d="M118 148 Q130 158 142 148" stroke="#D4A017" stroke-width="3" fill="none"/>
+  <path d="M116 152 Q130 165 144 152" stroke="#D4A017" stroke-width="3" fill="none"/>
+  <path d="M114 157 Q130 173 146 157" stroke="#F1CD6B" stroke-width="3" fill="none"/>
+  <!-- bangles -->
+  <circle cx="169" cy="248" r="4" fill="none" stroke="#D4A017" stroke-width="2.5"/>
+  <circle cx="169" cy="255" r="4" fill="none" stroke="#D4A017" stroke-width="2.5"/>
+</g>
+
+<!-- ================= GROOM ================= -->
+<g id="groom">
+  <!-- veshti / dhoti -->
+  <path d="M172 220 C168 260 166 320 168 392 L232 392
+           C234 320 232 260 226 220 Z" fill="url(#shirtGrad)"/>
+  <!-- front pleat drape -->
+  <path d="M196 224 C192 280 190 340 196 392 L204 392
+           C202 340 202 280 204 224 Z" fill="#e9d18f"/>
+  <!-- dhoti hem border -->
+  <path d="M168 384 L232 384 L232 392 L168 392 Z" fill="#D4A017"/>
+
+  <!-- shirt -->
+  <path d="M176 168 C168 172 164 184 164 196 L164 232 L234 232 L234 196
+           C234 184 230 172 222 168
+           C216 178 184 178 176 168 Z" fill="url(#shirtGrad)"/>
+  <!-- sleeves -->
+  <path d="M164 196 C154 202 146 212 142 224 L152 232 C158 220 164 210 170 202 Z" fill="#F1CD6B"/>
+  <path d="M234 196 C244 200 250 208 252 216 L244 224 C240 214 236 206 230 200 Z" fill="#F1CD6B"/>
+  <!-- angavastram — the colorful shoulder cloth that reads distinctly Tamil (vs. plain Kerala mundu-and-shirt) -->
+  <path d="M222 170 C233 178 239 202 236 232 L224 230
+           C226 204 222 186 214 172 Z" fill="url(#angavastramGrad)"/>
+  <path d="M222 170 C233 178 239 202 236 232" stroke="#D4A017" stroke-width="2.4" fill="none"/>
+  <!-- buttons -->
+  <circle cx="199" cy="182" r="1.6" fill="#9E1B32"/>
+  <circle cx="199" cy="192" r="1.6" fill="#9E1B32"/>
+  <circle cx="199" cy="202" r="1.6" fill="#9E1B32"/>
+  <circle cx="199" cy="212" r="1.6" fill="#9E1B32"/>
+
+  <!-- near arm reaching to bride -->
+  <path d="M172 206 C160 216 152 228 148 240" stroke="#F1CD6B" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <circle cx="147" cy="243" r="8" fill="#E8AD7D"/>
+  <!-- watch -->
+  <circle cx="252" cy="218" r="4" fill="#2B1712"/>
+
+  <!-- neck -->
+  <rect x="188" y="128" width="16" height="20" rx="6" fill="#E8AD7D"/>
+  <!-- head — grouped so cursor-tracking JS can tilt it as one unit -->
+  <g class="head-group" id="groomHeadGroup">
+    <circle cx="196" cy="108" r="23" fill="#E8AD7D"/>
+    <!-- hair -->
+    <path d="M175 104 C174 84 184 68 196 68 C210 68 220 84 218 104
+             C214 92 206 84 196 84 C186 84 178 92 175 104 Z" fill="#2B1712"/>
+    <!-- beard -->
+    <path d="M178 108 C178 122 186 134 196 136 C206 134 214 122 214 108
+             C214 118 206 126 196 126 C186 126 178 118 178 108 Z" fill="#2B1712" opacity="0.92"/>
+    <!-- eyes — white sclera + a dark pupil the cursor-tracking JS nudges -->
+    <ellipse cx="188" cy="104" rx="4.2" ry="3.4" fill="#FFFDF6"/>
+    <ellipse cx="204" cy="104" rx="4.2" ry="3.4" fill="#FFFDF6"/>
+    <circle class="pupil" cx="188" cy="104" r="2" fill="#2B1712"/>
+    <circle class="pupil" cx="204" cy="104" r="2" fill="#2B1712"/>
+    <path d="M183 99 Q188 96.5 193 99" stroke="#2B1712" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M199 99 Q204 96.5 209 99" stroke="#2B1712" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M188 116 Q196 121 204 116" stroke="#7a3a20" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <!-- tilak -->
+    <rect x="194.5" y="88" width="3" height="10" rx="1.5" fill="#9E1B32"/>
+  </g>
+
+  <!-- sandals -->
+  <ellipse cx="180" cy="393" rx="12" ry="4" fill="#5a3a20"/>
+  <ellipse cx="222" cy="393" rx="12" ry="4" fill="#5a3a20"/>
+</g>
+</svg>
         </div>
       </div>
       <!-- ===================================================================================================== -->
@@ -698,52 +981,93 @@ section{ position:relative; width:100%; padding:64px 20px; }
 
     <!-- ============= REPLACE: couple's story text ============= -->
     <p class="story-text reveal">
-      From a chance meeting to a lifetime promise — Nandha and Gayathi's journey has been
+      From a chance meeting to a lifetime promise — Nandha and Gayathri's journey has been
       guided by family, faith, and a whole lot of filter coffee. As they begin this new
       chapter under the blessings of their elders and the grace of the divine, they invite
       you to be part of their sacred union.
     </p>
     <!-- ============================================================= -->
 
-    <div class="arch-frames">
-      <div class="arch-frame bride reveal-scale">
-        <div class="inner">
-          <!-- ============= REPLACE: bride's photo — set src to real image ============= -->
-          <img data-ph="Bride Photo" data-ph-ratio="4x5" alt="Portrait of the bride, Nandha Kuman">
-          <!-- ============================================================================ -->
-        </div>
-        <div class="cap">Nandha Kuman</div>
-      </div>
-      <div class="arch-frame groom reveal-scale">
-        <div class="inner">
-          <!-- ============= REPLACE: groom's photo — set src to real image ============= -->
-          <img data-ph="Groom Photo" data-ph-ratio="4x5" alt="Portrait of the groom, Gayathi">
-          <!-- ============================================================================ -->
-        </div>
-        <div class="cap">Gayathi</div>
-      </div>
-    </div>
-
-    <!-- kolam pattern that draws itself on scroll -->
-    <div class="kolam-wrap">
-      <svg class="kolam-svg" id="kolamSvg" viewBox="0 0 200 200" aria-hidden="true">
-        <path d="M100 20 C140 20 180 60 180 100 C180 140 140 180 100 180 C60 180 20 140 20 100 C20 60 60 20 100 20 Z
-                 M100 50 C122 50 150 78 150 100 C150 122 122 150 100 150 C78 150 50 122 50 100 C50 78 78 50 100 50 Z"/>
-        <circle cx="100" cy="20"/><circle cx="100" cy="180"/>
-        <circle cx="20" cy="100"/><circle cx="180" cy="100"/>
-        <circle cx="100" cy="100" r="3"/>
+    <!-- "on a call" illustration pair — replaces the old photo frames.
+         Groom on the left with a phone to his ear, bride on the right with
+         wired earphones, fading in from opposite sides on scroll. -->
+    <div class="call-figures">
+      <svg class="call-figure call-groom reveal" viewBox="0 0 150 250" aria-hidden="true">
+        <defs>
+          <linearGradient id="cgShirt" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#F6DFA0"/><stop offset="100%" stop-color="#C68A17"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="75" cy="240" rx="42" ry="8" fill="#2B1712" opacity="0.12"/>
+        <!-- dhoti -->
+        <path d="M56 150 C53 180 52 212 55 236 L95 236 C98 212 97 180 94 150 Z" fill="url(#cgShirt)"/>
+        <path d="M55 228 L95 228 L95 236 L55 236 Z" fill="#D4A017"/>
+        <!-- shirt -->
+        <path d="M58 96 C50 100 46 112 46 124 L46 154 L104 154 L104 124 C104 112 100 100 92 96 C86 106 64 106 58 96 Z" fill="url(#cgShirt)"/>
+        <!-- far arm relaxed at side -->
+        <path d="M50 118 C42 130 38 144 38 158" stroke="#F6DFA0" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <circle cx="37" cy="161" r="7" fill="#E8AD7D"/>
+        <!-- near arm bent, phone to ear -->
+        <path d="M96 108 C106 104 112 92 111 78" stroke="#F6DFA0" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <circle cx="111" cy="75" r="7" fill="#E8AD7D"/>
+        <rect x="105" y="60" width="11" height="19" rx="3" fill="#2B1712" transform="rotate(8 110 70)"/>
+        <rect x="107.3" y="63" width="6.4" height="8" rx="1" fill="#8fb4c9" transform="rotate(8 110 70)"/>
+        <!-- neck + head -->
+        <rect x="67" y="58" width="16" height="18" rx="6" fill="#E8AD7D"/>
+        <circle cx="75" cy="40" r="21" fill="#E8AD7D"/>
+        <path d="M56 37 C55 20 64 8 75 8 C88 8 97 20 95 37 C92 27 85 20 75 20 C66 20 59 27 56 37 Z" fill="#2B1712"/>
+        <path d="M58 40 C58 52 65 61 75 63 C85 61 92 52 92 40 C92 49 85 56 75 56 C65 56 58 49 58 40 Z" fill="#2B1712" opacity="0.92"/>
+        <circle cx="68" cy="37" r="2.2" fill="#2B1712"/>
+        <path d="M68 48 Q75 52 82 48" stroke="#7a3a20" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        <rect x="73.5" y="24" width="3" height="9" rx="1.5" fill="#9E1B32"/>
+        <!-- sandals -->
+        <ellipse cx="62" cy="238" rx="10" ry="3.5" fill="#5a3a20"/>
+        <ellipse cx="88" cy="238" rx="10" ry="3.5" fill="#5a3a20"/>
       </svg>
-    </div>
 
-    <!-- illustrated bride & groom silhouettes in traditional attire, fade in on scroll -->
-    <div class="silhouettes">
-      <svg class="silhouette bride" viewBox="0 0 100 160" aria-hidden="true">
-        <path d="M50 10c8 0 14 6 14 14 0 6-3 10-6 13 14 6 20 20 20 40l4 60H18l4-60c0-20 6-34 20-40-3-3-6-7-6-13 0-8 6-14 14-14Z" fill="#9E1B32"/>
-        <path d="M28 78c6-4 14-6 22-6s16 2 22 6l-6 20c-10-5-22-5-32 0Z" fill="#D4A017"/>
-      </svg>
-      <svg class="silhouette groom" viewBox="0 0 100 160" aria-hidden="true">
-        <path d="M50 8c7 0 12 5 12 12 0 5-2 9-5 11 12 4 18 16 19 30l5 76H19l5-76c1-14 7-26 19-30-3-2-5-6-5-11 0-7 5-12 12-12Z" fill="#2F4E2C"/>
-        <rect x="46" y="30" width="8" height="90" fill="#F1CD6B"/>
+      <svg class="call-figure call-bride reveal" viewBox="0 0 150 250" aria-hidden="true">
+        <defs>
+          <linearGradient id="cbSaree" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#C9622F"/><stop offset="100%" stop-color="#9E1B32"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="75" cy="240" rx="42" ry="8" fill="#2B1712" opacity="0.12"/>
+        <!-- saree body -->
+        <path d="M54 96 C40 116 32 152 32 188 C32 208 36 224 42 236 L100 236 L100 108
+                 C100 100 90 96 78 96 Z" fill="url(#cbSaree)"/>
+        <!-- pallu contrast block -->
+        <path d="M58 98 L100 130 L100 172 L46 132 Z" fill="#1B4D38"/>
+        <path d="M58 98 L100 130 M46 132 L100 172" stroke="#D4A017" stroke-width="2.4"/>
+        <!-- hem border -->
+        <path d="M40 228 L100 228 L100 236 L42 236 Z" fill="#D4A017"/>
+        <!-- far arm relaxed -->
+        <path d="M96 122 C106 132 111 146 110 160" stroke="#C9622F" stroke-width="13" stroke-linecap="round" fill="none"/>
+        <circle cx="110" cy="163" r="7" fill="#E8AD7D"/>
+        <!-- near arm bent, holding phone at waist -->
+        <path d="M56 122 C46 132 40 144 40 156" stroke="#C9622F" stroke-width="13" stroke-linecap="round" fill="none"/>
+        <circle cx="40" cy="159" r="7" fill="#E8AD7D"/>
+        <rect x="33" y="156" width="14" height="22" rx="3" fill="#2B1712"/>
+        <rect x="35.5" y="159" width="9" height="10" rx="1" fill="#8fb4c9"/>
+        <!-- neck + head -->
+        <rect x="67" y="58" width="16" height="18" rx="6" fill="#E8AD7D"/>
+        <circle cx="75" cy="40" r="21" fill="#E8AD7D"/>
+        <path d="M56 37 C54 15 65 2 75 2 C88 2 99 15 95 37 C93 26 85 18 75 18 C60 18 57 27 56 37 Z" fill="#2B1712"/>
+        <circle cx="52" cy="52" r="9" fill="#2B1712"/>
+        <circle cx="43" cy="46" r="2.6" fill="#FFFDF6"/><circle cx="41" cy="52" r="2.6" fill="#FFFDF6"/>
+        <circle cx="43" cy="58" r="2.6" fill="#FFFDF6"/><circle cx="48" cy="63" r="2.6" fill="#FFFDF6"/>
+        <circle cx="69" cy="38" r="2.2" fill="#2B1712"/>
+        <path d="M62 51 Q69 56 76 51" stroke="#7a3a20" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        <circle cx="69" cy="29" r="2.6" fill="#9E1B32"/>
+        <!-- white wired earphones — one at each ear, cable running down to the phone in her hand -->
+        <circle cx="55" cy="42" r="3.2" fill="#FFFDF6" stroke="#d8cfc2" stroke-width="0.8"/>
+        <circle cx="95" cy="42" r="3.2" fill="#FFFDF6" stroke="#d8cfc2" stroke-width="0.8"/>
+        <path d="M55 45 C50 70 44 100 41 128 C40 140 40 148 40 154" fill="none" stroke="#FFFDF6" stroke-width="1.6"/>
+        <path d="M95 45 C92 60 90 75 92 90" fill="none" stroke="#FFFDF6" stroke-width="1.6"/>
+        <!-- jewellery -->
+        <path d="M64 78 Q75 86 86 78" stroke="#D4A017" stroke-width="2.6" fill="none"/>
+        <!-- sandals -->
+        <ellipse cx="55" cy="238" rx="10" ry="3.5" fill="#5a3a20"/>
+        <ellipse cx="85" cy="238" rx="10" ry="3.5" fill="#5a3a20"/>
       </svg>
     </div>
   </div>
@@ -763,19 +1087,11 @@ section{ position:relative; width:100%; padding:64px 20px; }
     <!-- ============= REPLACE: event names / times / descriptions as needed ============= -->
     <div class="timeline">
       <div class="tl-item reveal">
-        <span class="tl-dot"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3c3 4 6 7 6 11a6 6 0 11-12 0c0-4 3-7 6-11z" fill="#4B7447"/></svg></span>
-        <div class="tl-card">
-          <h3>Mangala Snanam</h3>
-          <div class="tl-time">15 Nov 2026 · 4:00 AM</div>
-          <p class="tl-desc">Sacred pre-wedding ritual bath for the bride and groom, performed with family blessings.</p>
-        </div>
-      </div>
-      <div class="tl-item reveal">
         <span class="tl-dot"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l1.8 5.6L19 8l-4 3.6L16 18l-4-3-4 3 1-6.4L5 8l5.2-.4L12 2z" fill="#D4A017"/></svg></span>
         <div class="tl-card">
-          <h3>Muhurtham</h3>
+          <h3>Marriage</h3>
           <div class="tl-time">15 Nov 2026 · 6:00 AM</div>
-          <p class="tl-desc">The sacred wedding moment — Nandha &amp; Gayathi are united in matrimony before the holy fire.</p>
+          <p class="tl-desc">The sacred wedding moment — Nandha &amp; Gayathri are united in matrimony before the holy fire.</p>
         </div>
       </div>
       <div class="tl-item reveal">
@@ -821,7 +1137,25 @@ section{ position:relative; width:100%; padding:64px 20px; }
 
     <!-- ============= REPLACE: swap data-ph images for real photos (set src="your-photo.jpg") ============= -->
     <div class="gallery-grid" id="galleryGrid">
-      <div class="g-item photo reveal-scale"><img data-ph="Couple" data-ph-ratio="1x1" alt="Nandha and Gayathi together"></div>
+      <div class="g-item photo reveal-scale"><img data-ph="Couple" data-ph-ratio="1x1" alt="Nandha and Gayathri together"></div>
+
+      <div class="g-item deco reveal-scale" aria-hidden="true">
+        <!-- illustrated family blessing ceremony accent — elders showering petals over the couple -->
+        <svg viewBox="0 0 100 100">
+          <path d="M18 34 C24 22 34 26 30 38 C40 30 46 40 38 46" fill="none" stroke="#D4A017" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="24" cy="30" r="2.4" fill="#9E1B32"/><circle cx="30" cy="40" r="2.4" fill="#D4A017"/>
+          <circle cx="36" cy="48" r="2.2" fill="#9E1B32"/><circle cx="44" cy="52" r="2.2" fill="#D4A017"/>
+          <circle cx="52" cy="46" r="2.2" fill="#9E1B32"/>
+          <path d="M78 34 C72 22 62 26 66 38 C56 30 50 40 58 46" fill="none" stroke="#D4A017" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="72" cy="30" r="2.4" fill="#9E1B32"/><circle cx="66" cy="40" r="2.4" fill="#D4A017"/>
+          <path d="M35 90 C33 74 38 62 48 62 C58 62 63 74 61 90 Z" fill="#9E1B32"/>
+          <circle cx="48" cy="56" r="8" fill="#E8AD7D"/>
+          <path d="M62 90 C60 72 66 58 76 58 C86 58 92 72 90 90 Z" fill="#F1CD6B"/>
+          <circle cx="76" cy="52" r="7.5" fill="#E8AD7D"/>
+          <path d="M35 78 H90" stroke="#D4A017" stroke-width="2" opacity="0.6"/>
+        </svg>
+      </div>
+
       <div class="g-item photo reveal-scale"><img data-ph="Family" data-ph-ratio="1x1" alt="Family photo"></div>
 
       <div class="g-item deco reveal-scale" aria-hidden="true">
@@ -857,7 +1191,7 @@ section{ position:relative; width:100%; padding:64px 20px; }
      FOOTER
 ========================================================================== -->
 <footer class="site-footer">
-  <div class="footer-names">Nandha &amp; Gayathi</div>
+  <div class="footer-names">Nandha &amp; Gayathri</div>
   <p class="footer-sub">15 · 11 · 2026 &nbsp;·&nbsp; Salem, Tamil Nadu</p>
   <p class="footer-sub">With love and gratitude to our families 🙏</p>
 </footer>
@@ -944,14 +1278,14 @@ section{ position:relative; width:100%; padding:64px 20px; }
   var FLOWER_URIS = [jasmineSVG(), marigoldSVG()];
 
   var petalWrap = document.getElementById('petals');
-  var PETAL_COUNT = 7;
+  var PETAL_COUNT = 4;
   for (var i = 0; i < PETAL_COUNT; i++){
     var p = document.createElement('span');
     p.className = 'petal';
     p.style.backgroundImage = "url('" + FLOWER_URIS[i % 2] + "')";
     var left = Math.random() * 100;
-    var duration = 13 + Math.random() * 9;
-    var delay = Math.random() * 14;
+    var duration = 17 + Math.random() * 11;
+    var delay = Math.random() * 20;
     var drift = (Math.random() * 70 - 35).toFixed(0) + 'px';
     p.style.left = left + '%';
     p.style.setProperty('--drift', drift);
@@ -968,25 +1302,135 @@ section{ position:relative; width:100%; padding:64px 20px; }
     }, { threshold: 0 }).observe(heroEl);
   }
 
-  /* arrow-key wind gust — nudges the whole flower layer sideways and eases back */
+  /* wind gust on the falling flowers — press ←/→ on desktop, or swipe
+     left/right over the hero on mobile (no arrow keys there, so this is
+     the primary way most guests will ever find the interaction). */
   var gustTimer;
-  document.addEventListener('keydown', function(e){
-    var gust = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
-    if (!gust) return;
-    e.preventDefault();
-    petalWrap.style.transform = 'translateX(' + (gust * 34) + 'px) rotate(' + (gust * 3) + 'deg)';
+  function triggerGust(direction){
+    petalWrap.style.transform = 'translateX(' + (direction * 34) + 'px) rotate(' + (direction * 3) + 'deg)';
     clearTimeout(gustTimer);
     gustTimer = setTimeout(function(){ petalWrap.style.transform = ''; }, 420);
+  }
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowLeft'){ e.preventDefault(); triggerGust(-1); }
+    else if (e.key === 'ArrowRight'){ e.preventDefault(); triggerGust(1); }
+  });
+  var gustTouchX = null;
+  heroEl.addEventListener('touchstart', function(e){ if (e.touches.length) gustTouchX = e.touches[0].clientX; }, { passive: true });
+  heroEl.addEventListener('touchend', function(e){
+    if (gustTouchX === null || !e.changedTouches.length) return;
+    var dx = e.changedTouches[0].clientX - gustTouchX;
+    gustTouchX = null;
+    if (Math.abs(dx) > 28) triggerGust(dx > 0 ? 1 : -1);
+  }, { passive: true });
+
+  /* ========================================================================
+     CLICK / TAP FIREWORK — a small colorful burst wherever you click on the
+     hero. Layered behind the text, the couple and the petals (z-index 2,
+     same tier as the garland) so it never covers what you're reading.
+  ======================================================================== */
+  var FIREWORK_PALETTE = ['#FFD84D', '#FF4D8D', '#4DE0D6', '#FF6B4A', '#8CE05A', '#B98CFF'];
+  var FIRE_COLORS = ['#FF5E1A', '#FF3B1F', '#FF8C1A', '#FF2D55']; // the rocket itself is always one of these
+  var MULTICOLOR_CHANCE = 0.18; // "rarely" multicolor — most bursts are one color
+  var fireworkHost = document.getElementById('heroInner');
+
+  function randomColor(){ return FIREWORK_PALETTE[Math.floor(Math.random() * FIREWORK_PALETTE.length)]; }
+  function randomFireColor(){ return FIRE_COLORS[Math.floor(Math.random() * FIRE_COLORS.length)]; }
+
+  function spawnBurst(x, y, singleColor){
+    var fw = document.createElement('div');
+    fw.className = 'firework';
+    fw.style.left = x + 'px';
+    fw.style.top = y + 'px';
+
+    var flash = document.createElement('span');
+    flash.className = 'flash';
+    if (singleColor) flash.style.background = 'radial-gradient(circle, #fff, ' + singleColor + ' 70%)';
+    fw.appendChild(flash);
+
+    var sparkCount = 20; // radiating streaks, not dots — reads as sparkle, not a paint splat
+    for (var i = 0; i < sparkCount; i++){
+      var angleRad = (Math.PI * 2 * i) / sparkCount + (Math.random() * 0.35 - 0.175);
+      var angleDeg = angleRad * 180 / Math.PI;
+      var dist = 32 + Math.random() * 46;
+      var c = singleColor || randomColor();
+
+      var wrap = document.createElement('span');
+      wrap.className = 'spark';
+      wrap.style.setProperty('--ang', angleDeg.toFixed(1) + 'deg');
+
+      var streak = document.createElement('i');
+      streak.style.setProperty('--dist', dist.toFixed(1) + 'px');
+      streak.style.setProperty('--sc', c);
+      streak.style.animationDelay = (Math.random() * 60).toFixed(0) + 'ms';
+
+      wrap.appendChild(streak);
+      fw.appendChild(wrap);
+    }
+    fireworkHost.appendChild(fw);
+    setTimeout(function(){ fw.remove(); }, 1000);
+  }
+
+  fireworkHost.addEventListener('click', function(e){
+    var rect = fireworkHost.getBoundingClientRect();
+    var targetX = e.clientX - rect.left, targetY = e.clientY - rect.top;
+    var burstColor = Math.random() < MULTICOLOR_CHANCE ? null : randomColor();
+
+    /* the rocket comes in from whichever side is closer to the click, so it
+       always has room to travel, then bursts the instant it arrives */
+    var fromLeft = targetX < rect.width / 2;
+    var originX = fromLeft ? -18 : rect.width + 18;
+    var originY = Math.min(rect.height - 12, targetY + 50 + Math.random() * 70);
+    var travelAngle = Math.atan2(targetY - originY, targetX - originX) * 180 / Math.PI;
+
+    var rocket = document.createElement('span');
+    rocket.className = 'fw-rocket';
+    rocket.style.left = targetX + 'px';
+    rocket.style.top = targetY + 'px';
+    rocket.style.color = randomFireColor();
+    rocket.style.setProperty('--sx', (originX - targetX).toFixed(0) + 'px');
+    rocket.style.setProperty('--sy', (originY - targetY).toFixed(0) + 'px');
+    rocket.style.setProperty('--travelAngle', travelAngle.toFixed(1) + 'deg');
+    rocket.addEventListener('animationend', function(ev){
+      if (ev.target !== rocket) return;
+      rocket.remove();
+      spawnBurst(targetX, targetY, burstColor);
+    });
+    fireworkHost.appendChild(rocket);
   });
 
   /* ========================================================================
      HERO PIN HEIGHT — keeps the hero sticky for a fraction of the total
      page height, then releases it into normal scrolling.
-     HERO_PIN_FRACTION = 0.5 means "pinned for the first half of the site".
-     Lower this (e.g. 0.3) if the pin ever feels too long.
+     HERO_PIN_FRACTION = 0.3 means "pinned for the first 30% of the site".
   ======================================================================== */
-  var HERO_PIN_FRACTION = 0.5;
+  var HERO_PIN_FRACTION = 0.3;
   var pinWrap = document.getElementById('home');
+  var heroBgSvg       = document.getElementById('heroBgSvg');
+  var heroBgContainer = document.querySelector('.hero-bg-image');
+
+  /* Sizes the temple SVG explicitly (instead of relying on plain CSS
+     width:100%/height:auto) so it always overflows its container by AT
+     LEAST MIN_TEMPLE_OVERFLOW. Pure width-based scaling makes a narrow
+     phone screen show far LESS vertical overflow than a wide desktop one
+     (the source art is very tall/narrow, so a wide screen naturally
+     overflows a lot more than a narrow one) — which read as the temple
+     looking more "zoomed out and cramped" on mobile. Forcing a shared
+     minimum keeps the framing consistent across phone/tablet/laptop. */
+  var TEMPLE_ASPECT = 560 / 1900;
+  var MIN_TEMPLE_OVERFLOW = 1.3;
+  function sizeTempleSvg(){
+    if (!heroBgSvg || !heroBgContainer) return;
+    var containerRect = heroBgContainer.getBoundingClientRect();
+    if (!containerRect.width || !containerRect.height) return;
+    var naturalHeight = containerRect.width / TEMPLE_ASPECT;
+    var minHeight = containerRect.height * (1 + MIN_TEMPLE_OVERFLOW);
+    var targetHeight = Math.max(naturalHeight, minHeight);
+    var targetWidth = targetHeight * TEMPLE_ASPECT;
+    heroBgSvg.style.width = targetWidth.toFixed(1) + 'px';
+    heroBgSvg.style.height = targetHeight.toFixed(1) + 'px';
+    heroBgSvg.style.left = ((containerRect.width - targetWidth) / 2).toFixed(1) + 'px';
+  }
 
   function setHeroPinHeight(){
     pinWrap.style.height = '100svh';
@@ -996,26 +1440,41 @@ section{ position:relative; width:100%; padding:64px 20px; }
       pinWrap.style.height = pinHeight + 'px';
     }
   }
+  sizeTempleSvg();
   setHeroPinHeight();
-  window.addEventListener('load', setHeroPinHeight);
+  window.addEventListener('load', function(){ sizeTempleSvg(); setHeroPinHeight(); });
   var resizeTimer;
   window.addEventListener('resize', function(){
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(setHeroPinHeight, 200);
+    resizeTimer = setTimeout(function(){ sizeTempleSvg(); setHeroPinHeight(); }, 200);
   });
 
   /* ========================================================================
      SCROLL-DRIVEN BACKGROUND PAN + TOP PROGRESS BAR
      The couple stays fixed in place — only the temple behind it moves,
-     panning straight down from the crown (0%) to the entrance (100%).
-     No scaling/zooming at all: background-size:cover already leaves a tall
-     image like temple.svg with plenty of vertical overflow to pan through
-     on any real screen (see the comment on .hero-bg-image), so this just
-     drives background-position-y directly off scroll progress.
+     sliding straight up from showing the crown (0%) to the entrance (100%).
+     No scaling/zooming at all: the SVG renders at its natural (much taller
+     than the viewport) height, and this just translateY's it within its
+     clipped container, measuring the real rendered heights each time so it
+     works regardless of screen size.
   ======================================================================== */
-  var heroBgImage  = document.querySelector('.hero-bg-image');
-  var progressBar  = document.getElementById('scrollProgress');
+  var progressBar        = document.getElementById('scrollProgress');
+  var heroContentEl2     = document.getElementById('heroContent');
+  var heroCoupleParallax = document.getElementById('heroCoupleParallax');
   var scrollTicking = false;
+
+  /* SETTLE_FRACTION = how much of the hero's pinned scroll range is spent
+     on the couple rising into place / date+countdown fading in. After that
+     fraction, both lock in place and ONLY the temple keeps panning for the
+     rest of the pin — matches the requested "settle first, then just the
+     temple moves" sequence. */
+  var SETTLE_FRACTION = 0.16;
+  var COUPLE_START_OFFSET = 0.22; // fraction of viewport height the couple starts below its resting spot
+  /* INITIAL_CROWN_OFFSET_FRACTION = at scroll progress 0, the crown sits this
+     far down (as a fraction of viewport height) instead of flush with the
+     very top — leaving dark sky above it, per "only the top of the temple,
+     centered, black sky above" at the start of the page. */
+  var INITIAL_CROWN_OFFSET_FRACTION = 0.4;
 
   function onScroll(){
     var scrollY = window.scrollY || window.pageYOffset;
@@ -1027,7 +1486,18 @@ section{ position:relative; width:100%; padding:64px 20px; }
     if (pinScrollRange > 0){
       var progress = (scrollY - pinTop) / pinScrollRange;
       progress = Math.max(0, Math.min(1, progress));
-      if (heroBgImage) heroBgImage.style.backgroundPositionY = (progress * 100).toFixed(2) + '%';
+      if (heroBgSvg && heroBgContainer){
+        var containerHeight = heroBgContainer.getBoundingClientRect().height;
+        var maxTranslate = heroBgSvg.getBoundingClientRect().height - containerHeight;
+        if (maxTranslate > 0){
+          var initialOffset = containerHeight * INITIAL_CROWN_OFFSET_FRACTION;
+          var bgY = initialOffset - progress * (initialOffset + maxTranslate);
+          heroBgSvg.style.transform = 'translateY(' + bgY.toFixed(1) + 'px)';
+        }
+      }
+      var settleProgress = Math.min(1, progress / SETTLE_FRACTION);
+      if (heroCoupleParallax) heroCoupleParallax.style.setProperty('--settleYf', (COUPLE_START_OFFSET * (1 - settleProgress)).toFixed(4));
+      if (heroContentEl2) heroContentEl2.style.setProperty('--settleOpacity', settleProgress.toFixed(3));
     }
     scrollTicking = false;
   }
@@ -1039,10 +1509,36 @@ section{ position:relative; width:100%; padding:64px 20px; }
   /* ========================================================================
      CURSOR SPOTLIGHT + COUPLE TILT — desktop / precise-pointer devices only
   ======================================================================== */
+  var heroInner = document.getElementById('heroInner');
+  var heroCoupleSvg = document.getElementById('heroCoupleSvg');
+  var gazePupils = heroCoupleSvg ? heroCoupleSvg.querySelectorAll('.pupil') : [];
+  var gazeHeads = heroCoupleSvg ? heroCoupleSvg.querySelectorAll('.head-group') : [];
+
+  /* gaze tracking — pupils nudge toward the pointer (capped so they never
+     leave the sclera) and each head tilts the same way, so the couple
+     appears to actually look where you point. Shared by mouse (desktop)
+     and touch-drag (mobile, which has no persistent cursor to track). */
+  function updateGaze(clientX, clientY){
+    if (!gazePupils.length) return;
+    var cRect = heroCoupleSvg.getBoundingClientRect();
+    var cx = cRect.left + cRect.width * 0.5;
+    var cy = cRect.top + cRect.height * 0.27;
+    var dx = clientX - cx, dy = clientY - cy;
+    var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    var reach = Math.min(2.8, dist / 60);
+    var px = (dx / dist) * reach, py = (dy / dist) * reach;
+    gazePupils.forEach(function(p){ p.style.transform = 'translate(' + px.toFixed(2) + 'px,' + py.toFixed(2) + 'px)'; });
+    var tilt = Math.max(-7, Math.min(7, dx / 24));
+    gazeHeads.forEach(function(h){ h.style.transform = 'rotate(' + tilt.toFixed(2) + 'deg)'; });
+  }
+  function resetGaze(){
+    gazePupils.forEach(function(p){ p.style.transform = ''; });
+    gazeHeads.forEach(function(h){ h.style.transform = ''; });
+  }
+
   if (window.matchMedia('(hover:hover) and (pointer:fine)').matches){
-    var heroInner = document.getElementById('heroInner');
     var cursorGlow = document.getElementById('cursorGlow');
-    var heroCoupleParallax = document.getElementById('heroCoupleParallax');
+
     heroInner.addEventListener('mousemove', function(e){
       var rect = heroInner.getBoundingClientRect();
       var x = e.clientX - rect.left;
@@ -1057,6 +1553,7 @@ section{ position:relative; width:100%; padding:64px 20px; }
         heroCoupleParallax.style.setProperty('--tiltX', rotX.toFixed(2) + 'deg');
         heroCoupleParallax.style.setProperty('--tiltY', rotY.toFixed(2) + 'deg');
       }
+      updateGaze(e.clientX, e.clientY);
     });
     heroInner.addEventListener('mouseenter', function(){ cursorGlow && cursorGlow.classList.add('active'); });
     heroInner.addEventListener('mouseleave', function(){
@@ -1065,8 +1562,41 @@ section{ position:relative; width:100%; padding:64px 20px; }
         heroCoupleParallax.style.setProperty('--tiltX', '0deg');
         heroCoupleParallax.style.setProperty('--tiltY', '0deg');
       }
+      resetGaze();
     });
+
+    /* date-pill bounce, JS-driven so it can never be triggered by a mobile
+       tap's lingering :hover state — see the CSS comment on .hero-date */
+    var heroDateEl = document.querySelector('.hero-date');
+    if (heroDateEl){
+      heroDateEl.addEventListener('mouseenter', function(){
+        heroDateEl.classList.add('js-hover-glow', 'js-bounce');
+      });
+      heroDateEl.addEventListener('mouseleave', function(){
+        heroDateEl.classList.remove('js-hover-glow');
+      });
+      heroDateEl.addEventListener('animationend', function(e){
+        if (e.animationName === 'dateBounce') heroDateEl.classList.remove('js-bounce');
+      });
+    }
   }
+
+  /* touch equivalent for mobile, where there's no hover-tracked cursor at
+     all. Listens on touchstart too (not just touchmove) — a plain tap that
+     never drags far enough to fire a touchmove event would otherwise never
+     trigger the gaze at all. */
+  heroInner.addEventListener('touchstart', function(e){
+    if (!e.touches.length) return;
+    updateGaze(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  heroInner.addEventListener('touchmove', function(e){
+    if (!e.touches.length) return;
+    updateGaze(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  /* deliberately no touchend->resetGaze: a tap's touchstart+touchend fire
+     back-to-back, so resetting there would erase the look before anyone
+     could see it. The gaze just holds at the last tapped/dragged spot,
+     the same way it holds at the last mouse position on desktop. */
 
   /* ========================================================================
      LIVE COUNTDOWN TO MUHURTHAM
@@ -1101,9 +1631,9 @@ section{ position:relative; width:100%; padding:64px 20px; }
     var end   = "20261115T090000";
     var params = new URLSearchParams({
       action: "TEMPLATE",
-      text: "Nandha & Gayathi's Wedding — Muhurtham",
+      text: "Nandha & Gayathri's Wedding — Muhurtham",
       dates: start + "/" + end,
-      details: "Join us as Nandha Kuman and Gayathi are united in marriage.",
+      details: "Join us as Nandha Kumar and Gayathri are united in marriage.",
       location: "Pragash Mahal, Salem, Tamil Nadu",
       ctz: "Asia/Kolkata"
     });
@@ -1113,7 +1643,7 @@ section{ position:relative; width:100%; padding:64px 20px; }
   /* ========================================================================
      SCROLL REVEALS — fade-up / scale-in via Intersection Observer
   ======================================================================== */
-  var revealEls = document.querySelectorAll('.reveal, .reveal-scale, .silhouette');
+  var revealEls = document.querySelectorAll('.reveal, .reveal-scale');
   if ('IntersectionObserver' in window){
     var revealObserver = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
@@ -1126,20 +1656,6 @@ section{ position:relative; width:100%; padding:64px 20px; }
     revealEls.forEach(function(el){ revealObserver.observe(el); });
   } else {
     revealEls.forEach(function(el){ el.classList.add('visible'); });
-  }
-
-  /* Kolam "draws itself" once in view */
-  var kolam = document.getElementById('kolamSvg');
-  if ('IntersectionObserver' in window){
-    new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (e.isIntersecting){
-          kolam.classList.add('drawn');
-        }
-      });
-    }, { threshold: 0.4 }).observe(kolam);
-  } else {
-    kolam.classList.add('drawn');
   }
 
   /* ========================================================================

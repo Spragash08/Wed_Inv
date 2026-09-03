@@ -5,8 +5,16 @@
     <stop offset="100%" stop-color="#9E1B32"/>
   </linearGradient>
   <linearGradient id="shirtGrad" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#FFFBEE"/>
-    <stop offset="100%" stop-color="#F1CD6B"/>
+    <stop offset="0%" stop-color="#F6DFA0"/>
+    <stop offset="100%" stop-color="#C68A17"/>
+  </linearGradient>
+  <linearGradient id="pallutGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#2E7D5B"/>
+    <stop offset="100%" stop-color="#1B4D38"/>
+  </linearGradient>
+  <linearGradient id="angavastramGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#C23E70"/>
+    <stop offset="100%" stop-color="#8E2A54"/>
   </linearGradient>
   <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%">
     <stop offset="0%" stop-color="#2B1712" stop-opacity="0.28"/>
@@ -25,8 +33,10 @@
            L150 392
            L150 200
            C150 182 132 168 108 168 Z" fill="url(#sareeGrad)"/>
-  <!-- pallu diagonal drape -->
-  <path d="M112 170 L150 200 L150 260 L96 200 Z" fill="#D4A017" opacity="0.9"/>
+  <!-- pallu diagonal drape — a contrasting silk block (Kanjivaram-style) with a gold zari border, not just a same-tone stripe -->
+  <path d="M112 170 L150 200 L150 260 L96 200 Z" fill="url(#pallutGrad)"/>
+  <path d="M112 170 L150 200 M96 200 L150 260" stroke="#D4A017" stroke-width="3"/>
+  <path d="M100 204 L106 210 M108 212 L114 218 M116 220 L122 226" stroke="#D4A017" stroke-width="1.6" opacity="0.8"/>
   <!-- hem border -->
   <path d="M80 372 L150 372 L150 392 L86 392 Z" fill="#D4A017"/>
   <!-- pleats hint -->
@@ -36,26 +46,30 @@
   <path d="M144 220 C158 232 166 244 168 256" stroke="#C9622F" stroke-width="16" stroke-linecap="round" fill="none"/>
   <circle cx="169" cy="259" r="8" fill="#E8AD7D"/>
 
-  <!-- neck + head -->
+  <!-- neck -->
   <rect x="122" y="130" width="16" height="20" rx="6" fill="#E8AD7D"/>
-  <circle cx="130" cy="112" r="24" fill="#E8AD7D"/>
-  <!-- hair -->
-  <path d="M106 108 C104 84 116 68 130 68 C146 68 158 84 156 108
-           C156 96 148 86 130 86 C114 86 106 96 106 108 Z" fill="#2B1712"/>
-  <path d="M108 108 C106 122 110 134 118 140 L112 140 C104 130 102 116 106 106 Z" fill="#2B1712"/>
-  <!-- bun, worn low at the back of the head -->
-  <circle cx="108" cy="122" r="10" fill="#2B1712"/>
-  <!-- jasmine string wrapped around the bun -->
-  <circle cx="98" cy="116" r="3" fill="#FFFDF6"/>
-  <circle cx="95" cy="123" r="3" fill="#FFFDF6"/>
-  <circle cx="97" cy="130" r="3" fill="#FFFDF6"/>
-  <circle cx="102" cy="135" r="3" fill="#FFFDF6"/>
-  <!-- face -->
-  <circle cx="124" cy="108" r="2.2" fill="#2B1712"/>
-  <path d="M129 106 Q132 108 130 111" stroke="#2B1712" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-  <path d="M117 121 Q124 127 131 121" stroke="#7a3a20" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-  <!-- bindi -->
-  <circle cx="124" cy="99" r="2.6" fill="#9E1B32"/>
+  <!-- head — grouped so cursor-tracking JS can tilt it as one unit -->
+  <g class="head-group" id="brideHeadGroup">
+    <circle cx="130" cy="112" r="24" fill="#E8AD7D"/>
+    <!-- hair -->
+    <path d="M106 108 C104 84 116 68 130 68 C146 68 158 84 156 108
+             C156 96 148 86 130 86 C114 86 106 96 106 108 Z" fill="#2B1712"/>
+    <path d="M108 108 C106 122 110 134 118 140 L112 140 C104 130 102 116 106 106 Z" fill="#2B1712"/>
+    <!-- bun, worn low at the back of the head -->
+    <circle cx="108" cy="122" r="10" fill="#2B1712"/>
+    <!-- jasmine string wrapped around the bun -->
+    <circle cx="98" cy="116" r="3" fill="#FFFDF6"/>
+    <circle cx="95" cy="123" r="3" fill="#FFFDF6"/>
+    <circle cx="97" cy="130" r="3" fill="#FFFDF6"/>
+    <circle cx="102" cy="135" r="3" fill="#FFFDF6"/>
+    <!-- eye — white sclera + a dark pupil the cursor-tracking JS nudges -->
+    <ellipse cx="124" cy="108" rx="4.6" ry="3.6" fill="#FFFDF6"/>
+    <circle class="pupil" cx="124" cy="108" r="2.1" fill="#2B1712"/>
+    <path d="M118.5 103.5 Q124 100 129.5 103.5" stroke="#2B1712" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M117 121 Q124 127 131 121" stroke="#7a3a20" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <!-- bindi -->
+    <circle cx="124" cy="99" r="2.6" fill="#9E1B32"/>
+  </g>
 
   <!-- jewellery: layered necklace -->
   <path d="M118 148 Q130 158 142 148" stroke="#D4A017" stroke-width="3" fill="none"/>
@@ -84,6 +98,10 @@
   <!-- sleeves -->
   <path d="M164 196 C154 202 146 212 142 224 L152 232 C158 220 164 210 170 202 Z" fill="#F1CD6B"/>
   <path d="M234 196 C244 200 250 208 252 216 L244 224 C240 214 236 206 230 200 Z" fill="#F1CD6B"/>
+  <!-- angavastram — the colorful shoulder cloth that reads distinctly Tamil (vs. plain Kerala mundu-and-shirt) -->
+  <path d="M222 170 C233 178 239 202 236 232 L224 230
+           C226 204 222 186 214 172 Z" fill="url(#angavastramGrad)"/>
+  <path d="M222 170 C233 178 239 202 236 232" stroke="#D4A017" stroke-width="2.4" fill="none"/>
   <!-- buttons -->
   <circle cx="199" cy="182" r="1.6" fill="#9E1B32"/>
   <circle cx="199" cy="192" r="1.6" fill="#9E1B32"/>
@@ -96,21 +114,28 @@
   <!-- watch -->
   <circle cx="252" cy="218" r="4" fill="#2B1712"/>
 
-  <!-- neck + head -->
+  <!-- neck -->
   <rect x="188" y="128" width="16" height="20" rx="6" fill="#E8AD7D"/>
-  <circle cx="196" cy="108" r="23" fill="#E8AD7D"/>
-  <!-- hair -->
-  <path d="M175 104 C174 84 184 68 196 68 C210 68 220 84 218 104
-           C214 92 206 84 196 84 C186 84 178 92 175 104 Z" fill="#2B1712"/>
-  <!-- beard -->
-  <path d="M178 108 C178 122 186 134 196 136 C206 134 214 122 214 108
-           C214 118 206 126 196 126 C186 126 178 118 178 108 Z" fill="#2B1712" opacity="0.92"/>
-  <!-- face -->
-  <circle cx="188" cy="104" r="2.4" fill="#2B1712"/>
-  <circle cx="204" cy="104" r="2.4" fill="#2B1712"/>
-  <path d="M188 116 Q196 121 204 116" stroke="#7a3a20" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-  <!-- tilak -->
-  <rect x="194.5" y="88" width="3" height="10" rx="1.5" fill="#9E1B32"/>
+  <!-- head — grouped so cursor-tracking JS can tilt it as one unit -->
+  <g class="head-group" id="groomHeadGroup">
+    <circle cx="196" cy="108" r="23" fill="#E8AD7D"/>
+    <!-- hair -->
+    <path d="M175 104 C174 84 184 68 196 68 C210 68 220 84 218 104
+             C214 92 206 84 196 84 C186 84 178 92 175 104 Z" fill="#2B1712"/>
+    <!-- beard -->
+    <path d="M178 108 C178 122 186 134 196 136 C206 134 214 122 214 108
+             C214 118 206 126 196 126 C186 126 178 118 178 108 Z" fill="#2B1712" opacity="0.92"/>
+    <!-- eyes — white sclera + a dark pupil the cursor-tracking JS nudges -->
+    <ellipse cx="188" cy="104" rx="4.2" ry="3.4" fill="#FFFDF6"/>
+    <ellipse cx="204" cy="104" rx="4.2" ry="3.4" fill="#FFFDF6"/>
+    <circle class="pupil" cx="188" cy="104" r="2" fill="#2B1712"/>
+    <circle class="pupil" cx="204" cy="104" r="2" fill="#2B1712"/>
+    <path d="M183 99 Q188 96.5 193 99" stroke="#2B1712" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M199 99 Q204 96.5 209 99" stroke="#2B1712" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M188 116 Q196 121 204 116" stroke="#7a3a20" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <!-- tilak -->
+    <rect x="194.5" y="88" width="3" height="10" rx="1.5" fill="#9E1B32"/>
+  </g>
 
   <!-- sandals -->
   <ellipse cx="180" cy="393" rx="12" ry="4" fill="#5a3a20"/>
